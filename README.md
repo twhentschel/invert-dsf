@@ -1,6 +1,10 @@
 # Invert DSF
 ==============================
 
+- update description in readme
+- describe the physical quantities in a simple language
+- give a rough outline of the analyses
+
 Analysis for inverting the dynamic structure factor to obtain a collision frequency, based on the Mermin dielectric model.
 
 Project Organization
@@ -31,6 +35,7 @@ Project Organization
     │
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
+    ├── setup.py           <- Make this project pip installable with `pip install -e`
     └── src                <- Source code for use in this project.
         ├── __init__.py    <- Makes src a Python module
         │
@@ -40,8 +45,8 @@ Project Organization
         ├── features       <- Scripts to turn raw data into a more useful form for inference
         │   └── build_features.py
         │
-        ├── bayes         <- Scripts to define distributions and perform Bayesian inference. Posterior
-        │   │                samples stored in (project)/data/mcmc 
+        ├── bayes         <- Scripts to define distributions and perform Bayesian
+        |   |                inference. Posterior samples stored in (project)/data/mcmc           
         │   ├── distributions.py
         │   └── inference.py
         │
