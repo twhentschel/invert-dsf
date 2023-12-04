@@ -1,7 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,md,py:percent
+#     formats: ipynb,py:percent
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -49,7 +49,7 @@ from uegdielectric import ElectronGas, dielectric
 
 # %% [markdown]
 # ## ELF
-
+#
 
 # %%
 def elf(q, ω, ν, e):
@@ -112,7 +112,7 @@ q = [0.5, 1, 1.5]  # [au]
 # ## Collision frequency model
 #
 # Here we start with a simple Lorentzian model centered at $\omega = 0$ for $\nu$. This choice is based on the form of the Drude conductivity __[confirm this]__
-
+#
 
 # %%
 def ν_lorentz(ω, width=1, height=1):
@@ -144,7 +144,7 @@ plt.xlabel(r"$\omega$")
 
 # %% [markdown]
 # Now, we will modify the simple Lorentzian model so that we have more control over the high-$\omega$ behavior. For that, we will scale the Lorentzian by the polynomial $(1 + (\omega/\gamma))^\alpha$, where $\gamma$ is the `width` of the Lorentzian, and $\alpha$ roughly controls how fast the high-frequency tail rises. There are many other approaches we can take for this, like using a "generalized" Lorentzian function $\nu(\omega) = h / (1 + (\omega/\gamma)^\alpha)$, but one example will suffice to demonstrate the plausability of the ELF's (and DSF's) sensitivity.
-
+#
 
 # %%
 def ν_model(ω, width=1, height=1, rise=0):
@@ -205,14 +205,13 @@ x = np.linspace(1e-1, 5e2, 2000)
 plt.plot(x, νr)
 plt.plot(x, νi)
 plt.xscale("log")
-plt.yscale("log")
 
 
 # %% [markdown]
 # ## Sensitivity analysis
 #
 # We will calculate the ELF using collision frequencies with different high-$\omega$ behavior, and also consider a few different density and temperature conditions.
-
+#
 
 # %%
 def plotsensitivity(q, t, d, subregion):
