@@ -17,25 +17,25 @@ scattering photons to the target, respectively. In particular, we'll call $q$ th
 they also correspond to the mode of electron-density fluctuations excited during the scattering event.
 
 We also wrote the Mermin dielectric in terms of $q$ and $\omega$, but it also has other parameters that correspond to the state of the
-electrons in the scattering target: $T$ is the electron temperature, $n_e$ is the density, and $\nu(\omega)$ is a frequency-depedent
+electrons in the scattering target: $T$ is the electron temperature, $n_e$ is the density, and $\nu(\omega)$ is a frequency-dependent
 _electron-ion collision rate_.
 
 When using the Mermin dielectric to construct the DSF, we'll refer to this total model as the Mermin DSF model.
 
-## Inverse problem - determing $\nu(\omega)$
+## Inverse problem - determining $\nu(\omega)$
 The accuracy of the Mermin DSF predictions relies crucially on the electron-ion collision rate $\nu(\omega)$ we give to our Mermin model.
 There are physical approximations that can be made to come up with models for $\nu$, but it is hard to evaluate their accuracy because
-this is not an easily measureable quantity. However, by taking advantage of the close connection between the Mermin dielectric (which depends on
-$\nu$) and the DSF (which _is_ measureable), it seems possible that we might be able to extract some information about the collision rate from 
-DSF data. This project addressess the feasibility of this idea.
+this is not an easily measurable quantity. However, by taking advantage of the close connection between the Mermin dielectric (which depends on
+$\nu$) and the DSF (which _is_ measureable), it seems possible that we might be able to extract some information about the collision rate from
+DSF data. This project addresses the feasibility of this idea.
 
 ## Analysis
 Typically, inverse problems are _ill-posed_, meaning that, among other things,
 the solution may not be unique. For example, inverting the DSF by minimizing a non-linear least-squares problem would only
-return a single solution, not the potentially-many other collision rates consistent with the data. In this project, 
-we use __Bayesian inference__ to obtain a posterior distribution for the collison rate for a given set of DSF data. The highlight of this
+return a single solution, not the potentially-many other collision rates consistent with the data. In this project,
+we use __Bayesian inference__ to obtain a posterior distribution for the collision rate for a given set of DSF data. The highlight of this
 approach is that, since we have a posterior distribution for $\nu(\omega)$, we can quantify the uncertainty
-associated with our inferred collision rate. 
+associated with our inferred collision rate.
 
 
 
