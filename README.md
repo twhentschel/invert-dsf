@@ -1,11 +1,45 @@
 # Invert DSF
 ==============================
 
-- update description in readme
-- describe the physical quantities in a simple language
-- give a rough outline of the analyses
+The dynamic structure factor (DSF) describes electronic density correlations in a material, and is measured in X-ray Thomson
+Scattering (XRTS) experiments. Physical models for the DSF that depend on material conditions, like temperature and density,
+can be fit to experimental data to infer these parameters. In the language of inverse problems, the DSF represents a _forward model_
+whereas the fitting of this forward model to the data is called the _inverse problem_. The goal of this project is to show
+a framework for inverting a specific DSF model for a given set of DSF data.
 
-Analysis for inverting the dynamic structure factor to obtain a collision frequency, based on the Mermin dielectric model.
+## DSF model
+The specific model we consider is based on the Mermin dielectric function $\epsilon$. In general the DSF (denoted as $S$) is closely
+related to the dielectric function
+
+$$ S(q, \omega) \propto \frac{(\hbar q)^2}{1 - \exp{-\hbar \omega / k_B T}} \mathrm{Im} \left[ \frac{-1}{ \epsilon(q, \omega; \nu(\omega), T, n_e)} \right] .$$
+
+In terms of scattering experiments, $\hbar q$ and $\hbar \omega$ refer to the momentum and energy that is transferred from the
+scattering photons to the target, respectively. In particular, we'll call $q$ the wavenumber and $\omega$ the frequency because
+they also correspond to the mode of electron fluctuations excited during the scattering event.
+
+We also wrote the Mermin dielectric in terms of $q$ and $\omega$, but it also has other parameters that correspond to the state of the
+electrons in the scattering target: $T$ is the electron temperature, $n_e$ is the density, and $\nu(\omega)$ is a frequency-depedent
+_electron-ion collision rate_.
+
+When using the Mermin dielectric to construct the DSF, we'll refer to this total model as the Mermin DSF model.
+
+## Iverse problem - determing $\nu(\omega)$
+The accuracy of the Mermin DSF predictions relies crucially on the electron-ion collision rate $\nu(\omega)$ we give to our Mermin model.
+There are physical approximations that can be made to come up with models for $\nu$, but it is hard to evaluate their accuracy because
+this is not an easily measureable quantity. However, by taking advantage of the close connection between the Mermin dielectric (which depends on
+$\nu$) and the DSF (which _is_ measureable), it seems possible that we might be able to extract some information about the collision rate from 
+DSF data. This project addressess the feasibility of this idea.
+
+## Analyses
+Typically, inverse problems are _ill-posed_, meaning that, among other things,
+the solution may not be unique. For example, inverting the DSF by minimizing a non-linear least-squares problem would only
+return a single solution, not the potentially-many other collision rates consistent with the data. In this project, 
+we use Bayesian inference to obtain a posterior distribution for the collison rate for a given set of DSF data. The highlight of this
+approach is that, since we have a posterior distribution for $\nu(\omega)$, we can quantify the uncertainty
+associated with our inferred collision rate. 
+
+
+
 
 Project Organization
 ------------
@@ -42,13 +76,10 @@ Project Organization
         ├── data           <- Scripts to download or generate data
         │   └── make_dataset.py
         │
-        ├── features       <- Scripts to turn raw data into a more useful form for inference
-        │   └── build_features.py
-        │
-        ├── bayes         <- Scripts to define distributions and perform Bayesian
-        |   |                inference. Posterior samples stored in (project)/data/mcmc           
-        │   ├── distributions.py
-        │   └── inference.py
+        ├── inference         <- Scripts to perform Bayesian inference. 
+        |   |                    Posterior samples stored in (project)/data/mcmc           
+        │   ├── collision_models.py
+        │   └── mcmc_inference.py
         │
         └── visualization  <- Scripts to create exploratory and results oriented visualizations
             └── visualize.py
