@@ -11,7 +11,7 @@ a framework for inverting a specific DSF model for a given set of DSF data.
 The specific model we consider is based on the Mermin dielectric function $\epsilon$. In general the DSF (denoted as $S$) is closely
 related to the dielectric function
 
-$$ S(q, \omega) = \frac{(\hbar q)^2}{1 - \exp{-\hbar \omega / k_B T}} \mathrm{Im} \left[ \frac{-1}{ \epsilon(q, \omega; \nu(\omega), T, n_e)} \right] .$$
+$$ S(q, \omega) \propto \frac{(\hbar q)^2}{1 - \exp{-\hbar \omega / k_B T}} \mathrm{Im} \left[ \frac{-1}{ \epsilon(q, \omega; \nu(\omega), T, n_e)} \right] .$$
 
 In terms of scattering experiments, $\hbar q$ and $\hbar \omega$ refer to the momentum and energy that is transferred from the
 scattering photons to the target, respectively. In particular, we'll call $q$ the wavenumber and $\omega$ the frequency because
