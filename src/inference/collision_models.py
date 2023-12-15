@@ -45,7 +45,16 @@ def drude(x, center=0, height=1):
     return gendrude(x, center, height)
 
 
-def collision_activate_decay(x, drudeargs, logisticargs, gendrudeargs):
+def collision_activate_decay(
+    x,
+    drude_center=0,
+    drude_height=1,
+    gendrude_center=0,
+    gendrude_height=1,
+    gendrude_decay=1.5,
+    logistic_activate=0,
+    logistic_gradient=1,
+):
     r"""
     A composite model for the collision frequency made up of multiple
     components that might represent different physical processes:
@@ -63,15 +72,14 @@ def collision_activate_decay(x, drudeargs, logisticargs, gendrudeargs):
     ___________
     x : array_like
         argument of function
-    drudeargs : dict
-        Keyword arguments that go into the `Drude` function.
-    logisitcargs : dict
-        Keyword arguments that go into the `logistic` function.
-    gendrudeargs: dict
-        Keyword arguments that go into the `gendrude` function.
-
+    drude_center, drude_height : float
+        arguments that go into the `Drude` function.
+    gendrude_center, gendrude_height, gendrude_decay: float
+        arguments that go into the `gendrude` function.
+    logistic_activate, logistic_gradient : float
+        arguments that go into the `logistic` function.
     """
-    drudebasic = drude(x, **drudeargs)
-    sigmoid = logistic(x, **logisticargs)
-    drudedecay = gendrude(x, **gendrudeargs)
+    drudebasic = drude(x, drude_center, drude_height)
+    drudedecay = gendrude(x, gendrude_center, gendrude_height, gendrude_decay)
+    sigmoid = logistic(logistic_activate, logistic_gradient)
     return drudebasic + sigmoid * drudedecay
