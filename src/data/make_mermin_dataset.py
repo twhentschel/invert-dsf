@@ -72,7 +72,7 @@ class MerminELFData:
             + "\n"
             + "Parameters:\n___________\n"
             + f"temperature (eV): {temp:.3f}\n"
-            + f"density (1/Angstrom^3): {den:.4f}\n\n"
+            + f"density (1/Angstrom^3): {den:.6f}\n\n"
             + "The first column is the frequency (eV), the second and third\n"
             + "are the real and imaginary parts of the collision rate (a.u.)\n"
             + "(as a function of the frequency) and the rest are the\n"
@@ -103,17 +103,17 @@ if __name__ == "__main__":
 
     # wave numbers
     q = np.asarray([0.5, 1, 1.5])  # [au]
-    freq = np.geomspace(1e-2, 1e3, 22)
+    freq = np.geomspace(1e-3, 1e2, 101)
 
     # collision rate parameters
     params = {
         "drude_center": 0,
-        "drude_height": 2.5,
+        "drude_height": 0.1,
         "gendrude_center": 0,
-        "gendrude_height": 2,
-        "gendrude_decay": 2.0,
-        "logistic_activate": 80,
-        "logistic_gradient": 0.1,
+        "gendrude_height": 1,
+        "gendrude_decay": 0.5,
+        "logistic_activate": 0.1,
+        "logistic_gradient": 100,
     }
 
     # define our collision rate function
