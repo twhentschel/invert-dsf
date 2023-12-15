@@ -79,7 +79,11 @@ def collision_activate_decay(
     logistic_activate, logistic_gradient : float
         arguments that go into the `logistic` function.
     """
-    drudebasic = drude(x, drude_center, drude_height)
-    drudedecay = gendrude(x, gendrude_center, gendrude_height, gendrude_decay)
-    sigmoid = logistic(logistic_activate, logistic_gradient)
+    drudebasic = drude(x, center=drude_center, height=drude_height)
+    drudedecay = gendrude(
+        x, center=gendrude_center, height=gendrude_height, decay=gendrude_decay
+    )
+    sigmoid = logistic(
+        x, activate=logistic_activate, gradient=logistic_gradient
+    )
     return drudebasic + sigmoid * drudedecay
