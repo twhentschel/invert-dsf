@@ -24,6 +24,9 @@ Constants = ConstantsTuple()
 class AtomicUnitsTuple(NamedTuple):
     """Values to convert to (and from) atomic units.
 
+    Atomic units are typically written as some familiar physical constant.
+    For example, 1 Hartree = 27.2114... eV = 1 atomic unit of energy.
+
     Values from <https://en.wikipedia.org/wiki/Hartree_atomic_units>
     """
 
