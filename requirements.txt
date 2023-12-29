@@ -97,7 +97,7 @@ Send2Trash==1.8.2
 six==1.16.0
 sniffio==1.3.0
 soupsieve==2.5
--e git+https://github.com/twhentschel/invert-dsf.git@20870f5992f35e30c19852762ac71ff315ba67aa#egg=src
+-e git+https://github.com/twhentschel/invert-dsf.git@d5c17461a50f98383e86101cc69bfd8a1415514d#egg=src
 stack-data==0.6.3
 terminado==0.18.0
 text-unidecode==1.3
@@ -107,7 +107,7 @@ tornado==6.4
 traitlets==5.14.0
 types-python-dateutil==2.8.19.14
 tzdata==2023.3
-ueg-dielectric @ git+https://github.com/twhentschel/ueg-dielectric.git@1bdfd40e15e4ab5c025d0e7b759b998ca0d7bbb3
+ueg-dielectric @ git+https://github.com/twhentschel/ueg-dielectric.git@40273def1e871abd41ed0435fc2374c45f8972f3
 uri-template==1.3.0
 urllib3==2.1.0
 wcwidth==0.2.12

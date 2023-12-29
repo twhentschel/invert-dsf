@@ -79,7 +79,7 @@ def elec_loss_fn(
     dielectric: ArrayLike | Mermin,
     wavenum: ArrayLike = None,
     frequency: ArrayLike = None,
-    collisonrate: Callable = None,
+    collisionrate: Callable = None,
 ) -> ArrayLike:
     r"""
     For given values of the dielectric function :math:`\epsilon`, return the
@@ -107,7 +107,10 @@ def elec_loss_fn(
             )
             raise RuntimeError(errmssg)
 
-        vals = dielectric(wavenum, frequency, collisonrate)
+        vals = dielectric(wavenum, frequency, collisionrate)
         return vals.imag / (vals.real**2 + vals.imag**2)
+
+    # convert to array if not already
+    dielectric = np.asanyarray(dielectric)
 
     return dielectric.imag / (dielectric.real**2 + dielectric.imag**2)
