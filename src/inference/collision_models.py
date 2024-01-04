@@ -20,7 +20,7 @@ def logistic(x, activate=0, gradient=1):
     return 1 / (1 + np.exp(-gradient * (x - activate)))
 
 
-def gendrude(x, center=0, height=1, decay=1.5):
+def gendrude(x, center=0, height=1, power=1.5):
     r"""
     Generalized Drude collision frequency function where the power-law decay is
     adjustable.
@@ -36,7 +36,7 @@ def gendrude(x, center=0, height=1, decay=1.5):
     decay: float
         The power at which the peak decays as :math: `|x| \rightarrow \infty`.
     """
-    return height / (1 + ((x - center) / (np.pi * height)) ** decay)
+    return height / (1 + np.abs((x - center) / (np.pi * height)) ** power)
 
 
 def drude(x, center=0, height=1):
@@ -51,7 +51,7 @@ def collision_activate_decay(
     drude_height=1,
     gendrude_center=0,
     gendrude_height=1,
-    gendrude_decay=1.5,
+    gendrude_power=1.5,
     logistic_activate=0,
     logistic_gradient=1,
 ):
@@ -81,7 +81,7 @@ def collision_activate_decay(
     """
     drudebasic = drude(x, center=drude_center, height=drude_height)
     drudedecay = gendrude(
-        x, center=gendrude_center, height=gendrude_height, decay=gendrude_decay
+        x, center=gendrude_center, height=gendrude_height, power=gendrude_power
     )
     sigmoid = logistic(
         x, activate=logistic_activate, gradient=logistic_gradient
