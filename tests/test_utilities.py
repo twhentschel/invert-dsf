@@ -2,12 +2,16 @@
 
 import pytest
 import numpy as np
+
+from uegdielectric.dielectric import Mermin
+from uegdielectric import ElectronGas
+
 import src.utilities as utils
 
 
-def test_collfreqimag_knownfunc():
+def test_collrateimag_knownfunc():
     r"""
-    Test the collfreqimag Kramers-Kronig transformation against a known
+    Test the `collrateimag` Kramers-Kronig transformation against a known
     function.
 
     In this test, the known function is the response function of a particle
@@ -50,7 +54,7 @@ def test_collfreqimag_knownfunc():
     freal_val = freal(omega)
 
     # Perform Kramers-Kronig transform
-    kramkron_imag = utils.collfreqimag(freal_val)
+    kramkron_imag = utils.collrateimag(freal_val)
 
     # perform test, examining the difference between the true imaginary part
     # and the calculated imaginary part
@@ -60,3 +64,36 @@ def test_collfreqimag_knownfunc():
         "`collfreqimag` Hilbert based Kramers-Kronig transformation failing."
     )
     assert testres, errmsg
+
+
+class TestElectronLossfn:
+    """Testing the elec_loss_fn function."""
+
+    testdata = [
+        ([[1, 2]], {}, (2,)),
+        ([2j], {}, ()),
+        (
+            [Mermin(ElectronGas(1, 1))],
+            {
+                "wavenum": [1, 3],
+                "frequency": [0.5, 1.0],
+                "collisionrate": lambda x: x + 1j * x,
+            },
+            (2, 2),
+        ),
+    ]
+
+    @pytest.mark.parametrize("args, kwargs, output_shape", testdata)
+    def test_elec_loss_fn_inputs(self, args, kwargs, output_shape):
+        """
+        Testing the elec_loss_fn function against different inputs.
+        """
+        assert utils.elec_loss_fn(*args, **kwargs).shape == output_shape
+
+    def test_elec_loss_fn_error(self):
+        """
+        Test that an error is raised when calling `elec_loss_fn` with a Mermin
+        dielectric object without other arguments.
+        """
+        with pytest.raises(Exception):
+            utils.elec_loss_fn(Mermin(ElectronGas(1, 1)))

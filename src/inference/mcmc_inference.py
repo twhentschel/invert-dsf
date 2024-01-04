@@ -2,7 +2,6 @@
 MCMC.
 """
 
-from collections import namedtuple
 from typing import Callable
 from numpy.typing import ArrayLike
 
@@ -11,28 +10,13 @@ from multiprocessing import Pool
 import h5py
 
 
-class InferenceInfo(namedtuple):
-    """Tuple containing information about inference runs, stored in HDF5
-    format.
-
-    ** args **
-    file (str) : name of HDF5 we are storing too, including path.
-    params (dict) : dictionary of parameters used in the inference that we want
-        to store with our data.
-    dataset (str): name of the group where we are storing our data (in the HDF5
-        file `file`).
-    """
-
-    file: str
-    params: dict
-    dataset: str
-
-
 def inference_loop(
     initial_state: ArrayLike,
     logposterior: Callable,
     numsamples: int,
-    run_info: InferenceInfo = None,
+    file: str,
+    dataset: str = "mcmc_posterior_samples",
+    params: dict = None,
     overwrite: bool = False,
 ) -> emcee.EnsembleSampler:
     """Perform Markov Chain Monte Carlo to sample from the (log) posterior.
@@ -47,10 +31,15 @@ def inference_loop(
         an array of length n to a single value.
     numsamples: int
         The number of samples we wish to draw from our MCMC run.
-    run_info: InferenceInfo
-        Information about this specific inference run that we want to save with
-        our data.
-    overwrite: bool
+    file: str
+        Name of HDF5 we are storing data too, including path.
+    dataset: str, optional
+        Name of the group where we are storing our data (in the HDF5
+        file `file`). Default is "mcmc_posterior_samples"
+    params: dict, optional
+        Dictionary of parameters used in the inference that we want
+        to store with our data.
+    overwrite: bool, optional
         If True, will overwrite a data with same name that we are proposing for
         current inference data in our HDF5 output file. Default is False.
     """
@@ -58,16 +47,17 @@ def inference_loop(
 
     # avoid overwriting previous data
     if not overwrite:
-        run_info.dataset = unique_hdf5_group(run_info.file, run_info.dataset)
+        dataset = unique_hdf5_group(file, dataset)
     # Set up the backend
-    backend = emcee.backends.HDFBackend(run_info.file, name=run_info.dataset)
+    backend = emcee.backends.HDFBackend(file, name=dataset)
     # Don't forget to clear it in case the file already exists
     backend.reset(nwalkers, ndim)
     # set inference parameter info in our HDF5 dataset
-    with h5py.file(run_info.file, "w") as f:
-        dset = f[run_info.dataset]
-        for k, v in run_info.params.items():
-            dset.attrs[k] = v
+    if params is not None:
+        with h5py.file(file, "w") as f:
+            dset = f[dataset]
+            for k, v in params.items():
+                dset.attrs[k] = v
 
     with Pool() as pool:
         sampler = emcee.EnsembleSampler(
