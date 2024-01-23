@@ -47,9 +47,7 @@ def drude(x, center=0, height=1):
 
 def collision_activate_decay(
     x,
-    drude_center=0,
     drude_height=1,
-    gendrude_center=0,
     gendrude_height=1,
     gendrude_power=1.5,
     logistic_activate=0,
@@ -72,16 +70,16 @@ def collision_activate_decay(
     ___________
     x : array_like
         argument of function
-    drude_center, drude_height : float
-        arguments that go into the `Drude` function.
-    gendrude_center, gendrude_height, gendrude_decay: float
+    drude_height : float
+        height argument that goes into the `Drude` function.
+    gendrude_height, gendrude_decay: float
         arguments that go into the `gendrude` function.
     logistic_activate, logistic_gradient : float
         arguments that go into the `logistic` function.
     """
-    drudebasic = drude(x, center=drude_center, height=drude_height)
+    drudebasic = drude(x, center=0, height=drude_height)
     drudedecay = gendrude(
-        x, center=gendrude_center, height=gendrude_height, power=gendrude_power
+        x, center=0, height=gendrude_height, power=gendrude_power
     )
     sigmoid = logistic(
         x, activate=logistic_activate, gradient=logistic_gradient
