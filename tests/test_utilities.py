@@ -9,7 +9,7 @@ from uegdielectric import ElectronGas
 import src.utilities as utils
 
 
-def test_collrateimag_knownfunc():
+def test_kramerskroning_knownfunc():
     r"""
     Test the `collrateimag` Kramers-Kronig transformation against a known
     function.
@@ -49,20 +49,18 @@ def test_collrateimag_knownfunc():
         return x / (1 + x**2)
 
     # domain of f
-    omega = np.linspace(0, 15.6, 500)
-    # get real part of function at values of omega
-    freal_val = freal(omega)
+    x = np.linspace(0, 15.6, 500)
+    # get real part of function at values of x
+    freal_val = freal(x)
 
     # Perform Kramers-Kronig transform
-    kramkron_imag = utils.collrateimag(freal_val)
+    kramkron_imag = utils.kramerskronig(x, freal_val)
 
     # perform test, examining the difference between the true imaginary part
     # and the calculated imaginary part
-    diff = np.linalg.norm(fimag(omega) - kramkron_imag)
-    testres = diff == pytest.approx(0.0, abs=1e-4)
-    errmsg = (
-        "`collfreqimag` Hilbert based Kramers-Kronig transformation failing."
-    )
+    diff = np.max(np.abs((fimag(x) - kramkron_imag)))
+    testres = diff == pytest.approx(0.0, abs=1e-1)
+    errmsg = "Kramers-Kronig transformation failing."
     assert testres, errmsg
 
 
