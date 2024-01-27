@@ -1,7 +1,6 @@
 """Miscellaneous helper functions"""
 
 import numpy as np
-import scipy.fftpack as ft
 
 from numpy.typing import ArrayLike
 from typing import Callable, NamedTuple
@@ -37,42 +36,44 @@ class AtomicUnitsTuple(NamedTuple):
 AtomicUnits = AtomicUnitsTuple()
 
 
-def collrateimag(collratereal: ArrayLike) -> ArrayLike:
-    r"""
-    Use the Kramers-Kronig transformation to compute the imaginary part of the
-    collision rate `collrateimag` from the real part. Here, since the real
-    part is symmetric about $\omega = 0$, the input is assumed to start at
-    $\omega = 0$. The true Kramers-Kronig transformation is an integral over
-    the whole real line, but if `collratereal` goes to zero before that, we can
-    get away with doing an integral that goes until `collratereal` is close
-    enough to zero. Thus, its important that the inputs `collratereal` are
-    close to zero near the end of the array.
-
-    Notes:
-    This relies on the inverse Hilbert transform to transform the real values
-    to the imaginary values. The implementation of the Hilbert transform uses
-    the fast Fourier transform (FFT) algorithm, which essentially assumes a
-    periodic function. In other words, our input values are periodically
-    extended over the whole real line (so that
-    collratereal(x) = collratereal(x + L) where L range of $\omega$ we are
-    considering). For the best results, the start and ending values of
-    `collratereal` should be near each other, otherwise a periodic extension
-    of this function would result in sharp jumps near the boundaries and yield
-    high freqeuency components in the Fourier transform. For the inputs assumed
-    here, we artificially extend `collratereal` about $\omega = 0$ before
-    feeding it to `scipy.fftpack.ihilbert`.
-
-    collratereal: array
-        Values of the real part of the function f.
-
-    returns:
-    collrateimag: array
-        Values of the imaginary part of the function f.
+def kramerskronig(x: ArrayLike, funcreal: ArrayLike) -> ArrayLike:
     """
-    real_ext = np.concatenate((collratereal[::-1], collratereal))
-    imag_ext = ft.ihilbert(real_ext)
-    collrateimag = imag_ext[len(collratereal) :]  # noqa 203
-    return collrateimag
+    Calculates the imaginary part of a function using Kramers-Kronig relations.
+    We take advantage of symmetry so the range of the integral is from 0 to
+    infinity, where we approximate this integral by assuming the last value of
+    `funcreal` is close enough to zero so we don't have to actually go out to
+    infinity.
+
+    Parameters:
+    - x: Numpy array, grid.
+    - funcreal: Numpy array, real function values on the grid.
+
+    Returns:
+    - funcimag: Numpy array, imaginary part of the function.
+    """
+    funcimag = np.zeros_like(x)
+
+    dx = np.zeros(len(x) - 1)
+    dx[0] = x[0]
+    dx[1:] = (x[2:] - x[:-2]) / 2
+
+    for i in range(1, len(x)):
+        # mask to avoid evaluation when i == j
+        mask_j = np.ones(len(x), dtype=bool)
+        mask_j[i] = False
+
+        funcimag[i] = (
+            -2
+            / np.pi
+            * x[i - 1]
+            * np.sum(
+                (funcreal[mask_j] - funcreal[i])
+                / (x[mask_j] ** 2 - x[i] ** 2)
+                * dx
+            )
+        )
+
+    return funcimag
 
 
 def elec_loss_fn(
