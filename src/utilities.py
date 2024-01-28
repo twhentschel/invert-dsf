@@ -91,7 +91,7 @@ def elec_loss_fn(
             \mathrm{Im}(-1 / \epsilon) =
                 \frac{\epsilon_i}{\epsilon_r**2 + \epsilon_i**2}
 
-    where the subscripts :math:`i, r` denote the real and imaginary parts,
+    where the subscripts :math:`r, i` denote the real and imaginary parts,
     respectively.
 
     If dielectric is `ArrayLike`, then no other arguments need to be used.
