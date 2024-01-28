@@ -1,6 +1,7 @@
 """Miscellaneous helper functions"""
 
 import numpy as np
+import scipy.integrate as integrate
 
 from numpy.typing import ArrayLike
 from typing import Callable, NamedTuple
@@ -76,6 +77,29 @@ def kramerskronig(x: ArrayLike, funcreal: ArrayLike) -> ArrayLike:
     return funcimag
 
 
+def kramerskronigfn(x: ArrayLike, funcreal: Callable) -> ArrayLike:
+    """
+    Kramers-Kronig transform where the real part is a function, not an
+    array like in `kramerskronig()`. Uses an adaptive quadrature approach
+    to compute the Cauchy principle value integral.
+
+    Parameters:
+    - x: Numpy array, grid.
+    - funcreal: function, real part of the function in Kramers-Kronig relation.
+
+    Returns:
+    - funcimag: Numpy array, imaginary part of the function.
+    """
+    funcimag = np.zeros_like(x)
+    maxvalx = np.max(np.abs(x))
+    for i in range(len(x)):
+        funcimag[i] = integrate.quad(
+            funcreal, -10 * maxvalx, 10 * maxvalx, weight="cauchy", wvar=x[i]
+        )[0]
+    funcimag = -1 / np.pi * funcimag
+    return funcimag
+
+
 def elec_loss_fn(
     dielectric: ArrayLike | Mermin,
     wavenum: ArrayLike = None,
@@ -91,7 +115,7 @@ def elec_loss_fn(
             \mathrm{Im}(-1 / \epsilon) =
                 \frac{\epsilon_i}{\epsilon_r**2 + \epsilon_i**2}
 
-    where the subscripts :math:`i, r` denote the real and imaginary parts,
+    where the subscripts :math:`r, i` denote the real and imaginary parts,
     respectively.
 
     If dielectric is `ArrayLike`, then no other arguments need to be used.
