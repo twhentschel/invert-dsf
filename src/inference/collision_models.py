@@ -124,7 +124,4 @@ def collision_activate_decay(
         x, activate=logistic_activate, gradient=logistic_gradient
     )
 
-    # ensures value of at x = 0 is `height`
-    factor = 1 + np.exp(logistic_activate * logistic_gradient)
-
-    return lorentziancollisions * logisticcollisions * factor
+    return lorentziancollisions * logisticcollisions
