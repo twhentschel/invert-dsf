@@ -45,7 +45,7 @@ def drude(x, center=0, height=1):
     return gendrude(x, center, height)
 
 
-def collision_activate_decay(
+def collision_drude_activate_decay(
     x,
     drude_height=1,
     gendrude_height=1,
@@ -55,7 +55,7 @@ def collision_activate_decay(
 ):
     r"""
     A composite model for the collision frequency made up of multiple
-    components that might represent different physical processes:
+    components that might represent different collisional processes:
 
     .. math::
 
@@ -85,3 +85,43 @@ def collision_activate_decay(
         x, activate=logistic_activate, gradient=logistic_gradient
     )
     return drudebasic + sigmoid * drudedecay
+
+
+def collision_activate_decay(
+    x,
+    lorentzian_height=1,
+    lorentzian_powerlaw=1.5,
+    logistic_activate=0,
+    logistic_gradient=1,
+):
+    """
+    Collision frequency model that represents a generalized free electron
+    response and a possible bound electron - free electron interaction.
+    Similar to `collision_activate_decay` but neglects the first Drude
+    function, so there are only 4 parameters.
+
+    The free electron collision frequency is modeled as a modified Lorentzian/
+    Drude function (see `gendrude`), while the bound-free collision frequency
+    is modeled as a logistic function (see `logistic`).
+
+    Parameters:
+    ___________
+    x: array_like
+        argument of the function
+    lorentzian_height: scalar
+        height of the Lorentzian peak
+    lorentzian_powerlaw: scalar
+        Power that the function follows as x -> infinity
+    logistic_activate: scalar
+        Point at which the logistic function turns on.
+    logistic_gradient: scalar
+        How "fast" the logistic function turns on.
+    """
+    lorentziancollisions = gendrude(
+        x, center=0, height=lorentzian_height, power=lorentzian_powerlaw
+    )
+    logisticcollisions = logistic(
+        x, activate=logistic_activate, gradient=logistic_gradient
+    )
+
+    return lorentziancollisions * logisticcollisions
