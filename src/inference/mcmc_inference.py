@@ -6,6 +6,7 @@ from typing import Callable
 from numpy.typing import ArrayLike
 
 import emcee
+import numpy as np
 from multiprocessing import Pool
 import h5py
 
@@ -14,9 +15,9 @@ def inference_loop(
     initial_state: ArrayLike,
     logposterior: Callable,
     numsamples: int,
-    file: str,
-    dataset: str = "mcmc_posterior_samples",
-    params: dict = None,
+    samplesfile: str,
+    dataset: str = None,
+    runinfo: dict = None,
     overwrite: bool = False,
 ) -> emcee.EnsembleSampler:
     """Perform Markov Chain Monte Carlo to sample from the (log) posterior.
@@ -31,43 +32,53 @@ def inference_loop(
         an array of length n to a single value.
     numsamples: int
         The number of samples we wish to draw from our MCMC run.
-    file: str
-        Name of HDF5 we are storing data too, including path.
+    samplesfile: str
+        Name of HDF5 we are storing sampling data too, including path.
     dataset: str, optional
         Name of the group where we are storing our data (in the HDF5
-        file `file`). Default is "mcmc_posterior_samples"
-    params: dict, optional
-        Dictionary of parameters used in the inference that we want
-        to store with our data.
+        file `file`). Default is None, which becomes "mcmc" due to `emcee`.
+    runinfo: dict, optional
+        Dictionary of information and parameters used in the inference that we
+        want to store with our data.
     overwrite: bool, optional
-        If True, will overwrite a data with same name that we are proposing for
-        current inference data in our HDF5 output file. Default is False.
+        If True, will overwrite `dataset` with new inference data in our HDF5
+        output file. If False, attempts to add new samples to `dataset`.
+        Default is False.
     """
-    nwalkers, ndim = initial_state.shape
+    numchains, ndim = initial_state.shape
 
-    # avoid overwriting previous data
-    if not overwrite:
-        dataset = unique_hdf5_group(file, dataset)
     # Set up the backend
-    backend = emcee.backends.HDFBackend(file, name=dataset)
-    # Don't forget to clear it in case the file already exists
-    backend.reset(nwalkers, ndim)
-    # set inference parameter info in our HDF5 dataset
-    if params is not None:
-        with h5py.file(file, "w") as f:
-            dset = f[dataset]
-            for k, v in params.items():
-                dset.attrs[k] = v
+    if dataset is None:
+        backend_kwargs = {}
+    else:
+        backend_kwargs = {"name": dataset}
+    backend = emcee.backends.HDFBackend(samplesfile, **backend_kwargs)
 
+    if overwrite:
+        # Don't forget to clear it in case the file already exists
+        backend.reset(numchains, ndim)
+    else:
+        # Don't need initial state if adding to existing data
+        initial_state = None
+
+    # perform ensemble MCMC sampling of logposterior
     with Pool() as pool:
         sampler = emcee.EnsembleSampler(
-            nwalkers,
+            numchains,
             ndim,
             logposterior,
             pool=pool,
             backend=backend,
         )
         sampler.run_mcmc(initial_state, numsamples, progress=True)
+
+    # set inference parameter info in our HDF5 dataset
+    if runinfo is not None:
+        # add information to h5py file
+        with h5py.File(samplesfile, "a") as f:
+            dset = f[dataset]
+            for k, v in runinfo.items():
+                dset.attrs[k] = v
 
     return sampler
 
@@ -86,3 +97,33 @@ def unique_hdf5_group(file: str, group: str, sep: str = "-") -> str:
             uniquegroup = group + sep + str(counter)
 
     return uniquegroup
+
+
+def flat_mcmc_samples(
+    backend: emcee.backends.Backend, printmcmcinfo: bool = True
+) -> ArrayLike:
+    """Combine the ensemble of chains stored in `backend` into a set of
+    approximately indepedent samples that are burned-in and thinned.
+    """
+    try:
+        tau = backend.get_autocorr_time()
+    except emcee.autocorr.AutocorrError as e:
+        print(e)
+        tau = backend.get_autocorr_time(tol=0)
+
+    burnin = int(2 * np.max(tau))
+    thin = max(1, int(0.5 * np.min(tau)))
+    flat_samples = backend.get_chain(discard=burnin, flat=True, thin=thin)
+
+    if printmcmcinfo:
+        print("Mean autocorrelation time: {0:.3f} steps".format(np.mean(tau)))
+        print("burn-in: {0}".format(burnin))
+        print("thin: {0}".format(thin))
+        print("flat chain shape: {0}".format(flat_samples.shape))
+        print(
+            "Mean acceptance fraction: {0:.3f}".format(
+                np.mean(backend.accepted / backend.iteration)
+            )
+        )
+
+    return flat_samples
