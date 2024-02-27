@@ -146,7 +146,7 @@ def residual(
         data that the parameters of the model should be optimized to fit.
 
     returns:
-        residual of the model with respect to the data `ydata`.
+        residual of the model with respect to some weighting:
         residual = (ydata - model(x, params)) / weight
     """
     ydata = np.asanyarray(ydata)
