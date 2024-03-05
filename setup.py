@@ -1,4 +1,6 @@
 from setuptools import find_packages, setup
+from Cython.Build import cythonize
+
 
 setup(
     name="src",
@@ -8,4 +10,5 @@ setup(
         a collision frequency, based on the Meermin dielectric function.""",
     author="Thomas Hentschel",
     license="MIT",
+    ext_modules=cythonize("src/inference/collision_models_cy.pyx"),
 )
