@@ -159,22 +159,47 @@ def collision_activate_decay_imag(
     )
     user_data = ctypes.cast(params, ctypes.c_void_p)
 
-    funcreal = LowLevelCallable.from_cython(
-        collision_models_cy, "coll_act_decay_kramerskronig_scipy", user_data
+    funcreal_kramkron = LowLevelCallable.from_cython(
+        collision_models_cy, "scipy_kramerskronig_integrand", user_data
+    )
+    funcreal_cauchy = LowLevelCallable.from_cython(
+        collision_models_cy, "scipy_cauchy_integrand", user_data
     )
 
     funcimag = np.zeros_like(x)
-    # effective infinity of the function
-    effectiveinfty = 10**3
 
     for i in range(len(funcimag)):
-        funcimag[i] = integrate.quad(
-            funcreal,
-            0,
+        # difficult region around the function 1/(y^2 - x[i]^2)
+        invsq_diffregion = 50
+        effectiveinfty = x[i] + invsq_diffregion
+        breakpoint1 = logistic_activate + invsq_diffregion
+        breakpoint2 = x[i] - invsq_diffregion
+        splitintegral = breakpoint1 < breakpoint2
+
+        if splitintegral:
+            # nothing exciting in the integrand in these regions
+            funcimag[i] += integrate.quad(
+                funcreal_kramkron,
+                0,
+                breakpoint2,
+                points=[breakpoint1],
+                args=(x[i])
+            )[0]
+        # integrate cauchy singularity
+        funcimag[i] += integrate.quad(
+            funcreal_cauchy,
+            breakpoint2 if splitintegral else 0,
             effectiveinfty,
             weight="cauchy",
             wvar=x[i],
-            args=(x[i]),
+            args=(x[i])
+        )[0]
+        # integrate out to infinity
+        funcimag[i] += integrate.quad(
+            funcreal_kramkron,
+            effectiveinfty,
+            np.inf,
+            args=(x[i])
         )[0]
 
     funcimag = -2 / np.pi * funcimag * x

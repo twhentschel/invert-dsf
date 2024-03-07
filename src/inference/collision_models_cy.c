@@ -2697,7 +2697,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_scipy
  * 
  *     return collision_activate_decay(x, height, powerlaw, activate, gradient)             # <<<<<<<<<<<<<<
  * 
- * cdef double coll_act_decay_kramerskronig_scipy(int n, double *xx, void *user_data):
+ * cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):
  */
   __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_collision_activate_decay(__pyx_v_x, __pyx_v_height, __pyx_v_powerlaw, __pyx_v_activate, __pyx_v_gradient, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 97, __pyx_L1_error)
   __pyx_r = __pyx_t_1;
@@ -2722,12 +2722,12 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_scipy
 /* "src/inference/collision_models_cy.pyx":99
  *     return collision_activate_decay(x, height, powerlaw, activate, gradient)
  * 
- * cdef double coll_act_decay_kramerskronig_scipy(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
- *     """ Alternate Lowlevel callback interface for `collision_activate_decay`
- *     for scipy.integrate.quad, providing a slightly modified function for
+ * cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
+ *     """ Alternate Lowlevel callback interface for scipy.integrate.quad, with
+ *     the cauchy weight function to perform Kramers-Kronig integration.
  */
 
-static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_kramerskronig_scipy(CYTHON_UNUSED int __pyx_v_n, double *__pyx_v_xx, void *__pyx_v_user_data) {
+static double __pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integrand(CYTHON_UNUSED int __pyx_v_n, double *__pyx_v_xx, void *__pyx_v_user_data) {
   double __pyx_v_height;
   double __pyx_v_powerlaw;
   double __pyx_v_activate;
@@ -2740,8 +2740,8 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_krame
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/inference/collision_models_cy.pyx":105
- * 
+  /* "src/inference/collision_models_cy.pyx":103
+ *     the cauchy weight function to perform Kramers-Kronig integration.
  *     """
  *     cdef double height = (<double *>user_data)[0]             # <<<<<<<<<<<<<<
  *     cdef double powerlaw = (<double *>user_data)[1]
@@ -2749,7 +2749,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_krame
  */
   __pyx_v_height = (((double *)__pyx_v_user_data)[0]);
 
-  /* "src/inference/collision_models_cy.pyx":106
+  /* "src/inference/collision_models_cy.pyx":104
  *     """
  *     cdef double height = (<double *>user_data)[0]
  *     cdef double powerlaw = (<double *>user_data)[1]             # <<<<<<<<<<<<<<
@@ -2758,7 +2758,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_krame
  */
   __pyx_v_powerlaw = (((double *)__pyx_v_user_data)[1]);
 
-  /* "src/inference/collision_models_cy.pyx":107
+  /* "src/inference/collision_models_cy.pyx":105
  *     cdef double height = (<double *>user_data)[0]
  *     cdef double powerlaw = (<double *>user_data)[1]
  *     cdef double activate = (<double *>user_data)[2]             # <<<<<<<<<<<<<<
@@ -2767,7 +2767,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_krame
  */
   __pyx_v_activate = (((double *)__pyx_v_user_data)[2]);
 
-  /* "src/inference/collision_models_cy.pyx":108
+  /* "src/inference/collision_models_cy.pyx":106
  *     cdef double powerlaw = (<double *>user_data)[1]
  *     cdef double activate = (<double *>user_data)[2]
  *     cdef double gradient = (<double *>user_data)[3]             # <<<<<<<<<<<<<<
@@ -2776,7 +2776,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_krame
  */
   __pyx_v_gradient = (((double *)__pyx_v_user_data)[3]);
 
-  /* "src/inference/collision_models_cy.pyx":109
+  /* "src/inference/collision_models_cy.pyx":107
  *     cdef double activate = (<double *>user_data)[2]
  *     cdef double gradient = (<double *>user_data)[3]
  *     cdef double cauchyprinciplepoint = xx[1]             # <<<<<<<<<<<<<<
@@ -2785,16 +2785,18 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_krame
  */
   __pyx_v_cauchyprinciplepoint = (__pyx_v_xx[1]);
 
-  /* "src/inference/collision_models_cy.pyx":111
+  /* "src/inference/collision_models_cy.pyx":109
  *     cdef double cauchyprinciplepoint = xx[1]
  * 
  *     return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0] + xx[1])             # <<<<<<<<<<<<<<
+ * 
+ * cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):
  */
-  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_collision_activate_decay((__pyx_v_xx[0]), __pyx_v_height, __pyx_v_powerlaw, __pyx_v_activate, __pyx_v_gradient, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 111, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_collision_activate_decay((__pyx_v_xx[0]), __pyx_v_height, __pyx_v_powerlaw, __pyx_v_activate, __pyx_v_gradient, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 109, __pyx_L1_error)
   __pyx_t_2 = ((__pyx_v_xx[0]) + (__pyx_v_xx[1]));
   if (unlikely(__pyx_t_2 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 111, __pyx_L1_error)
+    __PYX_ERR(0, 109, __pyx_L1_error)
   }
   __pyx_r = (__pyx_t_1 / __pyx_t_2);
   goto __pyx_L0;
@@ -2802,14 +2804,110 @@ static double __pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_krame
   /* "src/inference/collision_models_cy.pyx":99
  *     return collision_activate_decay(x, height, powerlaw, activate, gradient)
  * 
- * cdef double coll_act_decay_kramerskronig_scipy(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
- *     """ Alternate Lowlevel callback interface for `collision_activate_decay`
- *     for scipy.integrate.quad, providing a slightly modified function for
+ * cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
+ *     """ Alternate Lowlevel callback interface for scipy.integrate.quad, with
+ *     the cauchy weight function to perform Kramers-Kronig integration.
  */
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_AddTraceback("src.inference.collision_models_cy.coll_act_decay_kramerskronig_scipy", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("src.inference.collision_models_cy.scipy_cauchy_integrand", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = -1;
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "src/inference/collision_models_cy.pyx":111
+ *     return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0] + xx[1])
+ * 
+ * cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
+ *     """ Alternate Lowlevel callback interface for scipy.integrate.quad
+ *     to perform Kramers-Kronig integration.
+ */
+
+static double __pyx_f_3src_9inference_19collision_models_cy_scipy_kramerskronig_integrand(CYTHON_UNUSED int __pyx_v_n, double *__pyx_v_xx, void *__pyx_v_user_data) {
+  double __pyx_v_height;
+  double __pyx_v_powerlaw;
+  double __pyx_v_activate;
+  double __pyx_v_gradient;
+  CYTHON_UNUSED double __pyx_v_cauchyprinciplepoint;
+  double __pyx_r;
+  double __pyx_t_1;
+  double __pyx_t_2;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+
+  /* "src/inference/collision_models_cy.pyx":115
+ *     to perform Kramers-Kronig integration.
+ *     """
+ *     cdef double height = (<double *>user_data)[0]             # <<<<<<<<<<<<<<
+ *     cdef double powerlaw = (<double *>user_data)[1]
+ *     cdef double activate = (<double *>user_data)[2]
+ */
+  __pyx_v_height = (((double *)__pyx_v_user_data)[0]);
+
+  /* "src/inference/collision_models_cy.pyx":116
+ *     """
+ *     cdef double height = (<double *>user_data)[0]
+ *     cdef double powerlaw = (<double *>user_data)[1]             # <<<<<<<<<<<<<<
+ *     cdef double activate = (<double *>user_data)[2]
+ *     cdef double gradient = (<double *>user_data)[3]
+ */
+  __pyx_v_powerlaw = (((double *)__pyx_v_user_data)[1]);
+
+  /* "src/inference/collision_models_cy.pyx":117
+ *     cdef double height = (<double *>user_data)[0]
+ *     cdef double powerlaw = (<double *>user_data)[1]
+ *     cdef double activate = (<double *>user_data)[2]             # <<<<<<<<<<<<<<
+ *     cdef double gradient = (<double *>user_data)[3]
+ *     cdef double cauchyprinciplepoint = xx[1]
+ */
+  __pyx_v_activate = (((double *)__pyx_v_user_data)[2]);
+
+  /* "src/inference/collision_models_cy.pyx":118
+ *     cdef double powerlaw = (<double *>user_data)[1]
+ *     cdef double activate = (<double *>user_data)[2]
+ *     cdef double gradient = (<double *>user_data)[3]             # <<<<<<<<<<<<<<
+ *     cdef double cauchyprinciplepoint = xx[1]
+ * 
+ */
+  __pyx_v_gradient = (((double *)__pyx_v_user_data)[3]);
+
+  /* "src/inference/collision_models_cy.pyx":119
+ *     cdef double activate = (<double *>user_data)[2]
+ *     cdef double gradient = (<double *>user_data)[3]
+ *     cdef double cauchyprinciplepoint = xx[1]             # <<<<<<<<<<<<<<
+ * 
+ *     return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0]**2 - xx[1]**2)
+ */
+  __pyx_v_cauchyprinciplepoint = (__pyx_v_xx[1]);
+
+  /* "src/inference/collision_models_cy.pyx":121
+ *     cdef double cauchyprinciplepoint = xx[1]
+ * 
+ *     return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0]**2 - xx[1]**2)             # <<<<<<<<<<<<<<
+ */
+  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_collision_activate_decay((__pyx_v_xx[0]), __pyx_v_height, __pyx_v_powerlaw, __pyx_v_activate, __pyx_v_gradient, 0); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 121, __pyx_L1_error)
+  __pyx_t_2 = (pow((__pyx_v_xx[0]), 2.0) - pow((__pyx_v_xx[1]), 2.0));
+  if (unlikely(__pyx_t_2 == 0)) {
+    PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+    __PYX_ERR(0, 121, __pyx_L1_error)
+  }
+  __pyx_r = (__pyx_t_1 / __pyx_t_2);
+  goto __pyx_L0;
+
+  /* "src/inference/collision_models_cy.pyx":111
+ *     return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0] + xx[1])
+ * 
+ * cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
+ *     """ Alternate Lowlevel callback interface for scipy.integrate.quad
+ *     to perform Kramers-Kronig integration.
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("src.inference.collision_models_cy.scipy_kramerskronig_integrand", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   return __pyx_r;
@@ -2925,7 +3023,8 @@ static int __Pyx_modinit_function_export_code(void) {
   /*--- Function export code ---*/
   if (__Pyx_ExportFunction("collision_activate_decay", (void (*)(void))__pyx_f_3src_9inference_19collision_models_cy_collision_activate_decay, "double (double, double, double, double, double, int __pyx_skip_dispatch)") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   if (__Pyx_ExportFunction("coll_act_decay_scipy", (void (*)(void))__pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_scipy, "double (double, void *)") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
-  if (__Pyx_ExportFunction("coll_act_decay_kramerskronig_scipy", (void (*)(void))__pyx_f_3src_9inference_19collision_models_cy_coll_act_decay_kramerskronig_scipy, "double (int, double *, void *)") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  if (__Pyx_ExportFunction("scipy_kramerskronig_integrand", (void (*)(void))__pyx_f_3src_9inference_19collision_models_cy_scipy_kramerskronig_integrand, "double (int, double *, void *)") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
+  if (__Pyx_ExportFunction("scipy_cauchy_integrand", (void (*)(void))__pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integrand, "double (int, double *, void *)") < 0) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;

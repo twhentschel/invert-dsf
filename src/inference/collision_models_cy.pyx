@@ -96,11 +96,9 @@ cdef double coll_act_decay_scipy(double x, void *user_data):
 
     return collision_activate_decay(x, height, powerlaw, activate, gradient)
 
-cdef double coll_act_decay_kramerskronig_scipy(int n, double *xx, void *user_data):
-    """ Alternate Lowlevel callback interface for `collision_activate_decay`
-    for scipy.integrate.quad, providing a slightly modified function for
-    Kramers-Kronig integration.
-
+cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):
+    """ Alternate Lowlevel callback interface for scipy.integrate.quad, with
+    the cauchy weight function to perform Kramers-Kronig integration.
     """
     cdef double height = (<double *>user_data)[0]
     cdef double powerlaw = (<double *>user_data)[1]
@@ -109,3 +107,15 @@ cdef double coll_act_decay_kramerskronig_scipy(int n, double *xx, void *user_dat
     cdef double cauchyprinciplepoint = xx[1]
 
     return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0] + xx[1])
+
+cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):
+    """ Alternate Lowlevel callback interface for scipy.integrate.quad
+    to perform Kramers-Kronig integration.
+    """
+    cdef double height = (<double *>user_data)[0]
+    cdef double powerlaw = (<double *>user_data)[1]
+    cdef double activate = (<double *>user_data)[2]
+    cdef double gradient = (<double *>user_data)[3]
+    cdef double cauchyprinciplepoint = xx[1]
+
+    return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0]**2 - xx[1]**2)
