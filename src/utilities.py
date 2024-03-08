@@ -37,7 +37,7 @@ class AtomicUnitsTuple(NamedTuple):
 AtomicUnits = AtomicUnitsTuple()
 
 
-def kramerskronig(x: ArrayLike, funcreal: ArrayLike) -> ArrayLike:
+def kramerskronig_arr(x: ArrayLike, funcreal: ArrayLike) -> ArrayLike:
     """
     Calculates the imaginary part of a function using Kramers-Kronig relations.
     We take advantage of symmetry so the range of the integral is from 0 to
@@ -77,26 +77,107 @@ def kramerskronig(x: ArrayLike, funcreal: ArrayLike) -> ArrayLike:
     return funcimag
 
 
-def kramerskronigfn(x: ArrayLike, funcreal: Callable) -> ArrayLike:
-    """
+def kramerskronig(x: ArrayLike, funcreal: Callable) -> ArrayLike:
+    """Compute Kramers-Kroning transformation
+
     Kramers-Kronig transform where the real part is a function, not an
     array like in `kramerskronig()`. Uses an adaptive quadrature approach
     to compute the Cauchy principle value integral.
+
+    The real part is assumed to be a symmetric function.
 
     Parameters:
     - x: Numpy array, grid.
     - funcreal: function, real part of the function in Kramers-Kronig relation.
 
     Returns:
+    - : Numpy array, imaginary part of the function.
+    """
+
+    def cauchyintegrand(x, p):
+        return funcreal(x) / (x + p)
+
+    def kramkronintegrand(x, p):
+        return funcreal(x) / (x**2 - p**2)
+
+    return kramerskronig_fullintegrand(x, cauchyintegrand, kramkronintegrand)
+
+
+def kramerskronig_fullintegrand(
+    x, cauchyintegrand: Callable, kramkronintegrand: Callable
+):
+    """Compute Kramers-Kroning transformation
+
+    Kramers-Kronig transform where the real part is a function, not an
+    array like in `kramerskronig()`. Uses an adaptive quadrature approach
+    to compute the Cauchy principle value integral.
+
+    The real part is assumed to be a symmetric function.
+
+    >>> adaptive_kramerskronig(
+    >>>    x, cuachyintegrand, kramkronintegrand
+    >>> )
+
+    where `cuachyintegrand(x, p) = funcreal(x) / (x + p)` (`funcreal` is the
+    real part of the function whose imaginary part we want), which represents
+    the integrand that is used in a Cauchy principle value integral, and
+    `kramkronintegrand(x, p) = funcreal(x) / (x**2 - p**2)` represents the
+    full integrand used in the Kramers-Kronig integration (for an even
+    function `funcreal`). This facilitates using `scipy.LowLevelCallable`'s in
+    the integration.
+
+    Parameters:
+    - x: Numpy array, grid.
+    - cuachyintegrand: Callable, defined like
+        cuachyintegrand(x, p) = funcreal(x) / (x + p), where funcreal is the
+        function whose imaginary part we want.
+    - kramkronintegrand: Callable, defined like
+        kramkronintegrand(x, p) = funcreal(x) / (x**2 - p**2), where funcreal
+        is defined above.
+
+    Returns:
     - funcimag: Numpy array, imaginary part of the function.
     """
+    if np.any(x == 0):
+        raise ValueError(
+            "Unable to evaluate at `x` = 0 at this time. Choose a small, "
+            + "nonzero number instead."
+        )
+
     funcimag = np.zeros_like(x)
-    maxvalx = np.max(np.abs(x))
-    for i in range(len(x)):
-        funcimag[i] = integrate.quad(
-            funcreal, -10 * maxvalx, 10 * maxvalx, weight="cauchy", wvar=x[i]
+
+    for i in range(len(funcimag)):
+        # difficult region around the function 1/(y^2 - x[i]^2)
+        invsq_diffregion = 50
+        effectiveinfty = x[i] + invsq_diffregion
+        breakpoint1 = invsq_diffregion
+        breakpoint2 = x[i] - invsq_diffregion
+        splitintegral = breakpoint1 < breakpoint2
+
+        if splitintegral:
+            # nothing exciting in the integrand in these regions
+            funcimag[i] += integrate.quad(
+                kramkronintegrand,
+                0,
+                breakpoint2,
+                points=[breakpoint1],
+                args=(x[i]),
+            )[0]
+        # integrate cauchy singularity
+        funcimag[i] += integrate.quad(
+            cauchyintegrand,
+            breakpoint2 if splitintegral else 0,
+            effectiveinfty,
+            weight="cauchy",
+            wvar=x[i],
+            args=(x[i]),
         )[0]
-    funcimag = -1 / np.pi * funcimag
+        # integrate out to infinity
+        funcimag[i] += integrate.quad(
+            kramkronintegrand, effectiveinfty, np.inf, args=(x[i])
+        )[0]
+
+    funcimag = -2 / np.pi * funcimag * x
     return funcimag
 
 
