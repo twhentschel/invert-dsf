@@ -1,6 +1,11 @@
 """Collision frequency models."""
 
 import numpy as np
+import ctypes
+from scipy import LowLevelCallable
+
+from src.inference import collision_models_cy
+from src.utilities import kramerskronig_fullintegrand
 
 
 def logistic(x, activate=0, gradient=1):
@@ -125,3 +130,142 @@ def collision_activate_decay(
     )
 
     return lorentziancollisions * logisticcollisions
+
+
+# def collision_activate_decay_imag(
+#     x,
+#     lorentzian_height,
+#     lorentzian_powerlaw,
+#     logistic_activate,
+#     logistic_gradient,
+# ):
+#     """
+#     Imaginary part of the `collision_activate_decay` model, calculated using
+#     the Kramers-Kronig transformation.
+#     """
+#     if (
+#         np.any(x <= 0)
+#         or lorentzian_height < 0
+#         or lorentzian_powerlaw <= 0
+#         or logistic_activate < 0
+#         or logistic_gradient <= 0
+#     ):
+#         raise ValueError("Only accepts positive values for parameters")
+
+#     params = (ctypes.c_double * 4)(
+#         lorentzian_height,
+#         lorentzian_powerlaw,
+#         logistic_activate,
+#         logistic_gradient,
+#     )
+#     user_data = ctypes.cast(params, ctypes.c_void_p)
+
+#     funcreal_kramkron = LowLevelCallable.from_cython(
+#         collision_models_cy, "scipy_kramerskronig_integrand", user_data
+#     )
+#     funcreal_cauchy = LowLevelCallable.from_cython(
+#         collision_models_cy, "scipy_cauchy_integrand", user_data
+#     )
+
+#     funcimag = np.zeros_like(x)
+
+#     for i in range(len(funcimag)):
+#         # difficult region around the function 1/(y^2 - x[i]^2)
+#         invsq_diffregion = 50
+#         effectiveinfty = x[i] + invsq_diffregion
+#         breakpoint1 = invsq_diffregion
+#         breakpoint2 = x[i] - invsq_diffregion
+#         splitintegral = breakpoint1 < breakpoint2
+
+#         if splitintegral:
+#             # nothing exciting in the integrand in these regions
+#             funcimag[i] += integrate.quad(
+#                 funcreal_kramkron,
+#                 0,
+#                 breakpoint2,
+#                 points=[breakpoint1],
+#                 args=(x[i]),
+#             )[0]
+#         # integrate cauchy singularity
+#         funcimag[i] += integrate.quad(
+#             funcreal_cauchy,
+#             breakpoint2 if splitintegral else 0,
+#             effectiveinfty,
+#             weight="cauchy",
+#             wvar=x[i],
+#             args=(x[i]),
+#         )[0]
+#         # integrate out to infinity
+#         funcimag[i] += integrate.quad(
+#             funcreal_kramkron, effectiveinfty, np.inf, args=(x[i])
+#         )[0]
+
+#     funcimag = -2 / np.pi * funcimag * x
+#     return funcimag
+
+
+def collision_activate_decay_imag(
+    x,
+    lorentzian_height,
+    lorentzian_powerlaw,
+    logistic_activate,
+    logistic_gradient,
+):
+    """
+    Imaginary part of the `collision_activate_decay` model, calculated using
+    the Kramers-Kronig transformation.
+    """
+    if (
+        np.any(x <= 0)
+        or lorentzian_height < 0
+        or lorentzian_powerlaw <= 0
+        or logistic_activate < 0
+        or logistic_gradient <= 0
+    ):
+        raise ValueError("Only accepts positive values for parameters")
+
+    params = (ctypes.c_double * 4)(
+        lorentzian_height,
+        lorentzian_powerlaw,
+        logistic_activate,
+        logistic_gradient,
+    )
+    user_data = ctypes.cast(params, ctypes.c_void_p)
+
+    kramkronint = LowLevelCallable.from_cython(
+        collision_models_cy, "scipy_kramerskronig_integrand", user_data
+    )
+    cauchyint = LowLevelCallable.from_cython(
+        collision_models_cy, "scipy_cauchy_integrand", user_data
+    )
+
+    return kramerskronig_fullintegrand(x, cauchyint, kramkronint)
+
+
+# import time
+# from src.utilities import kramerskronigfn, kramerskronig
+
+# x = np.linspace(1e-6, 9, 100)
+# x2 = np.linspace(1e-6, 9, 1000)
+
+# a = time.time()
+# kramerskronigfn(x, lambda y: collision_activate_decay(y, 0.1, 0.1, 10, 1e1))
+# print(f"function Kramers-Kronig: {time.time() - a} s")
+
+# a = time.time()
+# kramerskronig(x2, collision_activate_decay(x2, 0.1, 0.1, 10, 1e1))
+# print(f"array Kramers-Kronig: {time.time() - a} s")
+
+# a = time.time()
+# collision_activate_decay_imag(x, 0.1, 0.1, 10, 1e1)
+# print("function Kramers-Kronig, Cython LowLevelCallable: {} s",
+#   time.time() - a)
+
+# a = time.time()
+# kramerskronigfn(
+#     x,
+#     lambda y: collision_models_cy.collision_activate_decay(
+#         y, 0.1, 0.1, 10, 1e1
+#     ),
+# )
+# print(f"function Kramers-Kronig, Cython: {time.time() - a} s")

@@ -9,112 +9,93 @@ from uegdielectric import ElectronGas
 import src.utilities as utils
 
 
-def test_kramerskroning_knownfunc():
-    r"""
-    Test the `kramerkronig` Kramers-Kronig transformation against a known
-    function.
+class TestKramersKronig:
+    """Tests for Kramers-Kronig transformation"""
 
-    In this test, the known function is the response function of a particle
-    being forced in a viscous fluid. The equation of motion is
+    examples_kramerskronig_funcs = [
+        # function 0
+        {"real": lambda x: 1 / (1 + x**2), "imag": lambda x: x / (1 + x**2)},
+        # function 1
+        {
+            "real": lambda x: (1 - x**2) / (x**4 - x**2 + 1),
+            "imag": lambda x: x / (x**4 - x**2 + 1),
+        },
+    ]
 
-    .. math::
+    @pytest.mark.parametrize("kkfunc", examples_kramerskronig_funcs)
+    def test_kramerskronig_array(self, kkfunc):
+        x = np.linspace(0, 50, 1_000)
+        freal = kkfunc["real"]
+        fimag = kkfunc["imag"]
 
-        \tau \frac{\mathrm{d} v}{\mathrm{d} t} + v = F(t)
+        kramkron_imag = utils.kramerskronig_arr(x, freal(x))
 
-    where :math:`\tau = m / b` is the mass of the object divided by the damping
-    constant, and :math:`F(t)` is the driving force. The response function in
-    this case is
+        # perform test, examining the difference between the true imaginary
+        # part and the calculated imaginary part
+        diff = np.max(np.abs((fimag(x) - kramkron_imag)))
+        testres = diff == pytest.approx(0.0, abs=5e-1)
+        errmsg = "Kramers-Kronig transformation (array input) failing."
+        assert testres, errmsg
 
-    .. math::
+    @pytest.mark.parametrize("kkfunc", examples_kramerskronig_funcs)
+    def test_adaptive_kramerskronig(self, kkfunc):
+        x = np.linspace(1e-6, 10, 10)
+        freal = kkfunc["real"]
+        fimag = kkfunc["imag"]
 
-        \chi(\omega) = \frac{\nu(\omega)}{F(\omega)} =
-            \frac{1}{1 + i \omega \tau}.
+        kramkron_imag = utils.kramerskronig(x, freal)
 
-    The real and imaginary parts of :math:`\chi(\omega)` are
+        # perform test, examining the difference between the true imaginary
+        # part and the calculated imaginary part
+        diff = np.max(np.abs((fimag(x) - kramkron_imag)))
+        testres = diff == pytest.approx(0.0, abs=1e-8)
+        errmsg = (
+            "Kramers-Kronig transformation (adaptive integration) failing."
+        )
+        assert testres, errmsg
 
-    .. math::
+    @pytest.mark.parametrize("kkfunc", examples_kramerskronig_funcs)
+    def test_adaptive_kramerskronig_fullintegrand(self, kkfunc):
+        x = np.linspace(1e-6, 10, 10)
 
-        \mathrm{Re}(\chi(\omega) &= \frac{1}{1 + \omega^2 \tau^2} \\
+        kramkron_imag = utils.kramerskronig_fullintegrand(
+            x,
+            lambda x, p: kkfunc["real"](x) / (x + p),
+            lambda x, p: kkfunc["real"](x) / (x**2 - p**2),
+        )
 
-        \mathrm{Im}(\chi(\omega) &= \frac{\omega \tau}{1 + \omega^2 \tau^2}
+        # perform test, examining the difference between the true imaginary
+        # part and the calculated imaginary part
+        diff = np.max(np.abs((kkfunc["imag"](x) - kramkron_imag)))
+        testres = diff == pytest.approx(0.0, abs=1e-8)
+        errmsg = (
+            "Kramers-Kronig transformation (adaptive integration, full "
+            + "integrand specified) failing."
+        )
+        assert testres, errmsg
 
-    """
+    @pytest.mark.parametrize("kkfunc", examples_kramerskronig_funcs)
+    def test_adaptive_kramerskronig_extendedrange(self, kkfunc):
+        x = np.geomspace(1e-3, 1e3, 100)
+        freal = kkfunc["real"]
+        fimag = kkfunc["imag"]
 
-    # real part of known function that obeys Kramers-Kronig
-    def freal(x):
-        return 1 / (1 + x**2)
+        kramkron_imag = utils.kramerskronig(x, freal)
 
-    # imaginary part of known function that obeys Kramers-Kronig
-    def fimag(x):
-        return x / (1 + x**2)
+        # perform test, examining the difference between the true imaginary
+        # part and the calculated imaginary part
+        diff = np.max(np.abs((fimag(x) - kramkron_imag)))
+        testres = diff == pytest.approx(0.0, abs=1e-7)
+        errmsg = (
+            "Kramers-Kronig transformation (adaptive integration, extended "
+            + "range) failing."
+        )
+        assert testres, errmsg
 
-    # domain of f
-    x = np.linspace(0, 15.6, 500)
-    # get real part of function at values of x
-    freal_val = freal(x)
-
-    # Perform Kramers-Kronig transform
-    kramkron_imag = utils.kramerskronig(x, freal_val)
-
-    # perform test, examining the difference between the true imaginary part
-    # and the calculated imaginary part
-    diff = np.max(np.abs((fimag(x) - kramkron_imag)))
-    testres = diff == pytest.approx(0.0, abs=1e-1)
-    errmsg = "Kramers-Kronig transformation (array input) failing."
-    assert testres, errmsg
-
-
-def test_kramerskroningfn_knownfunc():
-    r"""
-    Test the `kramerkronigfn` Kramers-Kronig transformation against a known
-    function.
-
-    In this test, the known function is the response function of a particle
-    being forced in a viscous fluid. The equation of motion is
-
-    .. math::
-
-        \tau \frac{\mathrm{d} v}{\mathrm{d} t} + v = F(t)
-
-    where :math:`\tau = m / b` is the mass of the object divided by the damping
-    constant, and :math:`F(t)` is the driving force. The response function in
-    this case is
-
-    .. math::
-
-        \chi(\omega) = \frac{\nu(\omega)}{F(\omega)} =
-            \frac{1}{1 + i \omega \tau}.
-
-    The real and imaginary parts of :math:`\chi(\omega)` are
-
-    .. math::
-
-        \mathrm{Re}(\chi(\omega) &= \frac{1}{1 + \omega^2 \tau^2} \\
-
-        \mathrm{Im}(\chi(\omega) &= \frac{\omega \tau}{1 + \omega^2 \tau^2}
-
-    """
-
-    # real part of known function that obeys Kramers-Kronig
-    def freal(x):
-        return 1 / (1 + x**2)
-
-    # imaginary part of known function that obeys Kramers-Kronig
-    def fimag(x):
-        return x / (1 + x**2)
-
-    # domain of f
-    x = np.linspace(0, 15.6, 100)
-
-    # Perform Kramers-Kronig transform
-    kramkron_imag = utils.kramerskronigfn(x, freal)
-
-    # perform test, examining the difference between the true imaginary part
-    # and the calculated imaginary part
-    diff = np.max(np.abs((fimag(x) - kramkron_imag)))
-    testres = diff == pytest.approx(0.0, rel=1e-08, abs=1e-06)
-    errmsg = "Kramers-Kronig transformation (function input) failing."
-    assert testres, errmsg
+    def test_adaptive_at_zero(self):
+        """Evaluating at zero raises an error for now."""
+        with pytest.raises(ValueError):
+            utils.kramerskronig(0, lambda x: 1)
 
 
 class TestElectronLossfn:

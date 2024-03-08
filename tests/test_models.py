@@ -2,4 +2,5 @@
 
 import pytest
 import numpy as np
-from src.inference import collision_models
+
+from src.inference import collision_models as cmods
