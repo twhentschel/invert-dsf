@@ -86,8 +86,10 @@ class MerminELFData:
 
 
 if __name__ == "__main__":
-    from src.inference.collision_models import collision_activate_decay
-    from src.utilities import collrateimag
+    from src.inference.collision_models import (
+        collision_activate_decay,
+        collision_activate_decay_imag,
+    )
     import json
 
     # thermal energy (kBT) in eV
@@ -107,11 +109,8 @@ if __name__ == "__main__":
 
     # collision rate parameters
     params = {
-        "drude_center": 0,
-        "drude_height": 0.1,
-        "gendrude_center": 0,
-        "gendrude_height": 1,
-        "gendrude_decay": 0.5,
+        "lorentzian_height": 1,
+        "lorentzian_powerlaw": 0.5,
         "logistic_activate": 0.1,
         "logistic_gradient": 100,
     }
@@ -121,7 +120,7 @@ if __name__ == "__main__":
         # real part
         recollision = collision_activate_decay(freq, **params)
         # imaginary part
-        imcollision = collrateimag(recollision)
+        imcollision = collision_activate_decay_imag(freq, **params)
 
         return recollision + 1j * imcollision
 
