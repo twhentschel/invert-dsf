@@ -76,10 +76,11 @@ Project Organization
         ├── data           <- Scripts to download or generate data
         │   └── make_dataset.py
         │
-        ├── inference         <- Scripts to perform Bayesian inference. 
-        |   |                    Posterior samples stored in (project)/data/mcmc           
-        │   ├── collision_models.py
-        │   └── mcmc_inference.py
+        ├── inference                 <- Scripts to perform Bayesian inference. 
+        |   |                            Posterior samples stored in (project)/data/mcmc           
+        │   ├── collision_models.py   <- models for the collision frequency
+        |   ├── probability_models.py <- models for probability and likelihood functions
+        │   └── mcmc_inference.py     <- helper functions for MCMC inference
         │
         └── visualization  <- Scripts to create exploratory and results oriented visualizations
             └── visualize.py
