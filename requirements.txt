@@ -106,12 +106,14 @@ rfc3986-validator==0.1.1
 rich==13.7.0
 rpds-py==0.13.2
 scipy==1.11.4
+seaborn==0.13.2
 Send2Trash==1.8.2
 six==1.16.0
 sniffio==1.3.0
 soupsieve==2.5
--e git+https://github.com/twhentschel/invert-dsf.git@1c90fcf866b6cbd17121d8277cf797030e2bf68c#egg=src
+-e git+https://github.com/twhentschel/invert-dsf.git@b3304e3e0f209b4441ef6781147247c67e2dce54#egg=src
 stack-data==0.6.3
+tenacity==8.2.3
 terminado==0.18.0
 text-unidecode==1.3
 tinycss2==1.2.1
