@@ -84,8 +84,9 @@ class SoftCutoffLogLikelihood(LogProbabilityBase):
         Parameters that go into `model`
     cutoff: scalar, default 0.01
         Cutoff point
-    residualtype: str, default "abs"
-        Type of residual function used
+    residualweight: str or array_like, default "abs"
+        Weighting of the residual function. Specific to the `residual` function
+        defined in this file.
     """
 
     def __init__(
@@ -94,7 +95,7 @@ class SoftCutoffLogLikelihood(LogProbabilityBase):
         x: ArrayLike,
         model: Callable,
         cutoff: float = 0.01,
-        residualtype: str = "abs",
+        residualweight: str | ArrayLike = "abs",
     ) -> None:
         self.ydata = ydata
         self.x = x
@@ -106,11 +107,11 @@ class SoftCutoffLogLikelihood(LogProbabilityBase):
                 + " scalar."
             )
         self.cutoff = cutoff
-        self.residualtype = residualtype
+        self.residualweight = residualweight
 
     def __call__(self, params: ArrayLike) -> float:
         residualeval = residual(
-            self.model, self.x, self.ydata, params, type=self.residualtype
+            self.model, self.x, self.ydata, params, self.residualweight
         )
 
         return -np.max((residualeval / (np.sqrt(2) * self.cutoff)) ** 2)
@@ -121,42 +122,48 @@ def residual(
     x: ArrayLike,
     ydata: ArrayLike,
     params: ArrayLike,
-    type: str = "abs",
+    weight: str | ArrayLike = "abs",
 ) -> ArrayLike:
     """
     Returns a residual function between the data and `model` function.
     Can be used with multi-dimensional array inputs as long as `ydata`
     and `model(x, params)` are broadcastable.
 
-    Parameters:
-    ___________
+    Parameters
+    ----------
     model: Callable
-        Function that models the data
+        Function that models the data with the signature `model(x, params)`
+        and returns an array or scalar with the same shape as `ydata`.
     x : array_like
         Input/indepedent data points
     ydata: array_like
         Depedent data
     params: array_like
         parameters of our model
-    type (string): the type of residual function. There are four choices:
-        "abs" - absolute residual: ydata - model
-        "rel" - relative residual: (ydata - model) / ydata
+    weight: str or array_like
+        string or array to weight the residual, with strings referring to
+        specific weightings for backwards compatibility. Supported string
+        options:
+        "abs" : absolute residual -> weight = 1
+        "rel" : relative residual -> weight = 1 / ydata
 
-        The different types will tend to emphasize different features in the
-        data that the parameters of the model should be optimized to fit.
+        Default is "abs".
 
-    returns:
+    returns
+    -------
         residual of the model with respect to some weighting:
-        residual = (ydata - model(x, params)) / weight
+        residual = (ydata - model(x, params)) * weight. 1D array_like object.
     """
+    if isinstance(weight, str):
+        match weight:
+            case "abs":
+                weight = 1
+            case "rel":
+                weight = 1 / ydata
+            case _:
+                m = f"Weight type {weight} not implemented."
+                raise NotImplementedError(m)
+
     ydata = np.asanyarray(ydata)
 
-    match type:
-        case "abs":
-            weight = 1
-        case "rel":
-            weight = ydata
-        case _:
-            raise ValueError(f"residual type {type} not accepted")
-
-    return ((ydata - model(x, params)) / weight).flatten()
+    return ((ydata - model(x, params)) * weight).flatten()
