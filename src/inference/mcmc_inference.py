@@ -19,6 +19,7 @@ def inference_loop(
     dataset: str = None,
     runinfo: dict = None,
     overwrite: bool = False,
+    **emceekwargs: dict,
 ) -> emcee.EnsembleSampler:
     """Perform Markov Chain Monte Carlo to sample from the (log) posterior.
 
@@ -44,6 +45,8 @@ def inference_loop(
         If True, will overwrite `dataset` with new inference data in our HDF5
         output file. If False, attempts to add new samples to `dataset`.
         Default is False.
+    emceekwargs: dict
+        Keyword aruments for `emcee.EnsembleSampler`.
     """
     numchains, ndim = initial_state.shape
 
@@ -58,8 +61,10 @@ def inference_loop(
         # Don't forget to clear it in case the file already exists
         backend.reset(numchains, ndim)
     else:
-        # Don't need initial state if adding to existing data
-        initial_state = None
+        # check if dataset currently exists
+        if dataset_exists(samplesfile, dataset):
+            # Don't need initial state if adding to existing data
+            initial_state = None
 
     # perform ensemble MCMC sampling of logposterior
     with Pool() as pool:
@@ -69,6 +74,7 @@ def inference_loop(
             logposterior,
             pool=pool,
             backend=backend,
+            **emceekwargs,
         )
         sampler.run_mcmc(initial_state, numsamples, progress=True)
 
@@ -82,6 +88,9 @@ def inference_loop(
 
     return sampler
 
+def dataset_exists(filename, dataset_name):
+    with h5py.File(filename, 'r') as f:
+        return dataset_name in f
 
 def unique_hdf5_group(file: str, group: str, sep: str = "-") -> str:
     """Returns a unique group in the HDF5 file `file`.
