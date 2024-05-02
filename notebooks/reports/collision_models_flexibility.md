@@ -56,19 +56,30 @@ dos_fn = lambda x : np.interp(x, np.sqrt(2 * data[0] / AtomicUnits.energy), dos)
 
 ```{code-cell} ipython3
 fig, ax = plt.subplots(2, 1, figsize=(6,8))
+freq = np.geomspace(1e-1, 1e3, 400)
 # collision frequency theories
-collnames = ["Born", "T-matrix", "T-matrix + inel. collisions"]
+collnames = ["Born"]#, "T-matrix", "T-matrix + inel. collisions"]
 # plot the real part only and our fitted model first
-for i, colldata in enumerate(data[1:]):
+for i, colldata in enumerate(data[1:2]):
+    AAcollfreqfn = lambda x : np.interp(x, data[0] / AtomicUnits.energy, colldata)
+    AAcollfreq_interp = AAcollfreqfn(freq / AtomicUnits.energy)
     # fit the model to the data
     # Use the relative residual in the fit: (ydata - model) / ydata
-    popt, _ = curve_fit(models.collision_activate_decay, data[0] / AtomicUnits.energy, colldata, p0=(1,1,1,1), sigma=colldata, bounds=(0, np.inf))
+    popt, _ = curve_fit(
+        models.collision_activate_decay,
+        freq / AtomicUnits.energy,
+        AAcollfreq_interp,
+        p0=(1, 1, 1, 1),
+        sigma=AAcollfreq_interp,
+        bounds=(0, 100)
+    )
+    print(popt)
     # plot the data
-    p = ax[0].plot(data[0], colldata, label=f"{collnames[i]}")
+    p = ax[0].plot(freq, AAcollfreq_interp)#, label=f"{collnames[i]}")
     # plot the model with optimized parameters
     ax[0].plot(
-        data[0], 
-        models.collision_activate_decay(data[0] / AtomicUnits.energy, *popt), 
+        freq, 
+        models.collision_activate_decay(freq / AtomicUnits.energy, *popt), 
         ls="--", 
         color=p[-1].get_color(),
         alpha=0.8
@@ -80,28 +91,28 @@ for i, colldata in enumerate(data[1:]):
         rpaelf = elec_loss_fn(
             mermin, 
             q, 
-            data[0] / AtomicUnits.energy
+            freq / AtomicUnits.energy
         )
-        ax[1].plot(data[0], rpaelf, color="gray", ls="-.", label="RPA")
+        ax[1].plot(freq, rpaelf, color="gray", ls="-.", label="RPA")
     else:
         mermin = dielectric.Mermin(ElectronGas(t, d, dos_fn, m))
     elf = elec_loss_fn(
         mermin, 
         q, 
-        data[0] / AtomicUnits.energy, 
-        lambda x : np.interp(x, data[0] / AtomicUnits.energy, colldata)
+        freq / AtomicUnits.energy, 
+        AAcollfreqfn
     )
     ax[1].plot(
-        data[0],
+        freq,
         elf
     )
 
-ax[0].set_ylim(2e-3, 5e-1)
-ax[0].set_xlim(data[0, 0], data[0, -1])
+#ax[0].set_ylim(2e-3, 5e-1)
+ax[0].set_xlim(1e-1, 1e3)
 ax[0].legend(frameon=False)
 ax[0].set_ylabel("Collision frequency (at. u.)")
-ax[0].set_xscale("log")
-ax[0].set_yscale("log")
+# ax[0].set_xscale("log")
+# ax[0].set_yscale("log")
 
 ax[1].set_xlim(0, 50)
 ax[1].set_ylabel("ELF (at. u.)")
@@ -109,8 +120,4 @@ ax[1].set_xlabel(r"$\hbar \omega$ (eV)")
 
 plt.tight_layout()
 # plt.savefig("../../reports/figures/model-fit-AA-collisions")
-```
-
-```{code-cell} ipython3
-
 ```
