@@ -212,7 +212,12 @@ class BornLogPeak:
     def born_integral_screening(self):
         return 4 * self.chargestate / (3 * np.pi) * self.pintegral_screening()
 
-    def born_width_sumrule_preserving(self, bornheight):
+    def approx_born_width_integral_preserving(self, bornheight):
+        """
+        Returns the correct width parameter in `screened_born_approx` so that
+        the integral agrees with the integral of  the exact screened Born
+        collision frequency theory.
+        """
         return (
             3
             * np.sqrt(3)
@@ -230,7 +235,7 @@ class BornLogPeak:
         return born_logpeak_model(
             x,
             born_height=params[0],
-            born_width=self.born_width_sumrule_preserving(params[0]),
+            born_width=self.approx_born_width_integral_preserving(params[0]),
             logpeak_height=params[1],
             logpeak_activate=params[2],
             logpeak_gradient=params[3],
@@ -246,7 +251,7 @@ class BornLogPeak:
         return born_logpeak_model_imag(
             x,
             born_height=params[0],
-            born_width=self.born_width_integral_preserving(params[0]),
+            born_width=self.approx_born_width_integral_preserving(params[0]),
             logpeak_height=params[1],
             logpeak_activate=params[2],
             logpeak_gradient=params[3],
