@@ -1,6 +1,6 @@
 """Collision frequency models."""
 
-from libc.math cimport exp
+from libc.math cimport exp, fabs
 
 
 cdef double logistic_peak(
@@ -23,7 +23,7 @@ cdef double logistic_peak(
         function as x -> +infinity
     """
     return 1 / (
-        1 + exp(-gradient * (x - activate)) + (x / activate) ** decay_power
+        1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power
     )
 
 
@@ -43,7 +43,7 @@ cdef double screened_born_approx(
     width: float
         Controls the width of the peak.
     """
-    return height / (1.0 + (x / width) ** 1.5)
+    return height / (1.0 + fabs(x / width) ** 1.5)
 
 
 cdef double born_logpeak_model(

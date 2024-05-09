@@ -2011,7 +2011,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(double
  *         function as x -> +infinity
  *     """
  *     return 1 / (             # <<<<<<<<<<<<<<
- *         1 + exp(-gradient * (x - activate)) + (x / activate) ** decay_power
+ *         1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power
  *     )
  */
   __pyx_t_1 = __pyx_t_double_complex_from_parts(1, 0);
@@ -2019,7 +2019,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(double
   /* "src/inference/collision_models_cy.pyx":26
  *     """
  *     return 1 / (
- *         1 + exp(-gradient * (x - activate)) + (x / activate) ** decay_power             # <<<<<<<<<<<<<<
+ *         1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power             # <<<<<<<<<<<<<<
  *     )
  * 
  */
@@ -2027,13 +2027,13 @@ static double __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(double
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     __PYX_ERR(0, 26, __pyx_L1_error)
   }
-  __pyx_t_2 = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts((1.0 + exp(((-__pyx_v_gradient) * (__pyx_v_x - __pyx_v_activate)))), 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts((__pyx_v_x / __pyx_v_activate), 0), __pyx_t_double_complex_from_parts(__pyx_v_decay_power, 0)));
+  __pyx_t_2 = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts((1.0 + exp(((-__pyx_v_gradient) * (__pyx_v_x - __pyx_v_activate)))), 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(fabs((__pyx_v_x / __pyx_v_activate)), 0), __pyx_t_double_complex_from_parts(__pyx_v_decay_power, 0)));
 
   /* "src/inference/collision_models_cy.pyx":25
  *         function as x -> +infinity
  *     """
  *     return 1 / (             # <<<<<<<<<<<<<<
- *         1 + exp(-gradient * (x - activate)) + (x / activate) ** decay_power
+ *         1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power
  *     )
  */
   if (unlikely(__Pyx_c_is_zero_double(__pyx_t_2))) {
@@ -2080,7 +2080,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx
   /* "src/inference/collision_models_cy.pyx":46
  *         Controls the width of the peak.
  *     """
- *     return height / (1.0 + (x / width) ** 1.5)             # <<<<<<<<<<<<<<
+ *     return height / (1.0 + fabs(x / width) ** 1.5)             # <<<<<<<<<<<<<<
  * 
  * 
  */
@@ -2089,7 +2089,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     __PYX_ERR(0, 46, __pyx_L1_error)
   }
-  __pyx_t_2 = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts(1.0, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts((__pyx_v_x / __pyx_v_width), 0), __pyx_t_double_complex_from_parts(1.5, 0)));
+  __pyx_t_2 = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts(1.0, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(fabs((__pyx_v_x / __pyx_v_width)), 0), __pyx_t_double_complex_from_parts(1.5, 0)));
   if (unlikely(__Pyx_c_is_zero_double(__pyx_t_2))) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
     __PYX_ERR(0, 46, __pyx_L1_error)
@@ -2833,7 +2833,7 @@ if (!__Pyx_RefNanny) {
   /* "src/inference/collision_models_cy.pyx":1
  * """Collision frequency models."""             # <<<<<<<<<<<<<<
  * 
- * from libc.math cimport exp
+ * from libc.math cimport exp, fabs
  */
   __pyx_t_2 = __Pyx_PyDict_NewPresized(0); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
