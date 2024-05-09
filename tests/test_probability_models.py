@@ -18,21 +18,21 @@ class TestResidual:
         M, N = 2, 3
         ydata = np.arange(0, 6).reshape((M, N))
         x = np.linspace(0, 1, N)
-        res = pmods.residual(self.model, x, ydata, self.params, type="abs")
+        res = pmods.residual(self.model, x, ydata, self.params, weight="abs")
         assert res.shape == (6,)
 
     def test_type_error(self):
-        with pytest.raises(ValueError):
+        with pytest.raises(NotImplementedError):
             pmods.residual(
                 self.model, self.arrayx, self.arraydata, [0, 1], "other"
             )
 
     def test_point_data_abs(self):
-        res = pmods.residual(self.model, 1, 2, [0, 1], type="abs")
+        res = pmods.residual(self.model, 1, 2, [0, 1], weight="abs")
         assert res == 1
 
     def test_point_data_rel(self):
-        res = pmods.residual(self.model, 1, 2, [0, 1], type="rel")
+        res = pmods.residual(self.model, 1, 2, [0, 1], weight="rel")
         assert res == 0.5
 
 
