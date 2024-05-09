@@ -1,16 +1,17 @@
 """Collision frequency models."""
 
 import numpy as np
+from numpy.typing import ArrayLike
 import ctypes
-from scipy import LowLevelCallable
+from scipy import LowLevelCallable, integrate
 
 from src.inference import collision_models_cy
-from src.utilities import kramerskronig_fullintegrand
+from src.utilities import kramerskronig_fullintegrand, kramerskronig
 
 
-def logistic(x, activate=0, gradient=1):
+def logistic_peak(x, activate=0, gradient=1, decay_power=0):
     """
-    Logistic function
+    Logistic function with a controllable decay term.
 
     Parameters:
     ___________
@@ -21,136 +22,108 @@ def logistic(x, activate=0, gradient=1):
     gradient: float
         The slope of the logistic function at `x` = `activate`. The larger this
         quantity, the faster the rise of this function.
+    decay_power: float
+        The power of the decay term, which governs the power law of the
+        function as x -> +infinity
     """
-    return 1 / (1 + np.exp(-gradient * (x - activate)))
+    return 1 / (
+        1 + np.exp(-gradient * (x - activate)) + (x / activate) ** decay_power
+    )
 
 
-def gendrude(x, center=0, height=1, power=1.5):
+def screened_born_approx(x, height, width):
     r"""
-    Generalized Drude collision frequency function where the power-law decay is
-    adjustable.
+    Function that has similar low- and high-frequency limits as the Born
+    collision frequency in the presence of electron-ion screening. Units are
+    such that the output is in atomic units of inverse seconds.
 
     Parameters:
     ___________
     x: array_like
         Argument of the function.
-    center: float
-        The location of the peak.
     height: float
         Height of the peak.
-    decay: float
-        The power at which the peak decays as :math: `|x| \rightarrow \infty`.
+    width: float
+        Controls the width of the peak.
     """
-    return height / (1 + np.abs((x - center) / (np.pi * height)) ** power)
+    return height / (1.0 + (x / width) ** 1.5)
 
 
-def drude(x, center=0, height=1):
-    """Typical Drude collision frequency function. See `gendrude` for
-    arguments decscriptions."""
-    return gendrude(x, center, height)
-
-
-def collision_drude_activate_decay(
+def born_logpeak_model(
     x,
-    drude_height=1,
-    gendrude_height=1,
-    gendrude_power=1.5,
-    logistic_activate=0,
-    logistic_gradient=1,
-):
-    r"""
-    A composite model for the collision frequency made up of multiple
-    components that might represent different collisional processes:
-
-    .. math::
-
-        \nu(\omega) = \nu_\mathrm{D'}(\omega; \nu_0, 3/2) +
-            \frac{h}{1 + e^{-\alpha(\omega - \omega_0)}} \times
-            \nu_\mathrm{D'}(\omega; \nu_1, \alpha)
-
-    where :math:`\nu_\mathrm{D'}(\omega; h, \alpha) = \frac{h}{1 + (\omega /
-    \pi h)^{\alpha}}` is the generalized Drude function centered at 0.
-
-    Parameters:
-    ___________
-    x : array_like
-        argument of function
-    drude_height : float
-        height argument that goes into the `Drude` function.
-    gendrude_height, gendrude_decay: float
-        arguments that go into the `gendrude` function.
-    logistic_activate, logistic_gradient : float
-        arguments that go into the `logistic` function.
-    """
-    drudebasic = drude(x, center=0, height=drude_height)
-    drudedecay = gendrude(
-        x, center=0, height=gendrude_height, power=gendrude_power
-    )
-    sigmoid = logistic(
-        x, activate=logistic_activate, gradient=logistic_gradient
-    )
-    return drudebasic + sigmoid * drudedecay
-
-
-def collision_activate_decay(
-    x,
-    lorentzian_height=1,
-    lorentzian_powerlaw=1.5,
-    logistic_activate=0,
-    logistic_gradient=1,
+    born_height,
+    born_width,
+    logpeak_height,
+    logpeak_activate,
+    logpeak_gradient,
+    logpeak_decay,
 ):
     """
     Collision frequency model that represents a generalized free electron
-    response and a possible bound electron - free electron interaction.
-    Similar to `collision_activate_decay` but neglects the first Drude
-    function, so there are only 4 parameters.
+    response and a possible inelastic interaction.
 
-    The free electron collision frequency is modeled as a modified Lorentzian/
-    Drude function (see `gendrude`), while the bound-free collision frequency
-    is modeled as a logistic function (see `logistic`).
+    The free electron collision frequency is modeled as a modified using an
+    approximation to the Born collision frequency (see `screened_born_approx`),
+    while the inelasatic collision frequency is modeled as a logistic-peak
+    function (see `logistic_peak`).
+
+    Units are such that the output is in atomic units of inverse seconds.
 
     Parameters:
     ___________
     x: array_like
         argument of the function
-    lorentzian_height: scalar
-        height of the Lorentzian peak
-    lorentzian_powerlaw: scalar
-        Power that the function follows as x -> infinity
-    logistic_activate: scalar
+    born_height: scalar
+        height of the Born function peak
+    born_width: scalar
+        Controls the width of the Born peak
+    logpeak_height: scalar
+        Height of the logistic function.
+    logpeak_activate: scalar
         Point at which the logistic function turns on.
-    logistic_gradient: scalar
+    logpeak_gradient: scalar
         How "fast" the logistic function turns on.
+    logpeak_decay: float
+        The power of the decay term, which governs the power law of the
+        function as x -> +infinity
     """
-    lorentziancollisions = gendrude(
-        x, center=0, height=lorentzian_height, power=lorentzian_powerlaw
+
+    borncollisions = screened_born_approx(x, born_height, born_width)
+    inelasticcollisions = logistic_peak(
+        x,
+        activate=logpeak_activate,
+        gradient=logpeak_gradient,
+        decay_power=logpeak_decay,
     )
-    logisticcollisions = logistic(
-        x, activate=logistic_activate, gradient=logistic_gradient
-    )
 
-    return lorentziancollisions * logisticcollisions
+    return borncollisions + logpeak_height * inelasticcollisions
 
 
-def collision_activate_decay_imag(
+def born_logpeak_model_imag(
     x,
-    lorentzian_height,
-    lorentzian_powerlaw,
-    logistic_activate,
-    logistic_gradient,
+    born_height,
+    born_width,
+    logpeak_height,
+    logpeak_activate,
+    logpeak_gradient,
+    logpeak_decay,
 ):
     """
-    Imaginary part of the `collision_activate_decay` model, calculated using
+    Imaginary part of the `born_logistic_model` function, calculated using
     the Kramers-Kronig transformation.
+
+    Units are such that the output is in atomic units of inverse seconds.
     """
     if np.any(x <= 0):
         raise ValueError("Only accepts positive values for the argument x")
 
-    params = (ctypes.c_double * 4)(
-        lorentzian_height,
-        lorentzian_powerlaw,
-        logistic_activate,
-        logistic_gradient,
+    params = (ctypes.c_double * 6)(
+        born_height,
+        born_width,
+        logpeak_height,
+        logpeak_activate,
+        logpeak_gradient,
+        logpeak_decay,
     )
     user_data = ctypes.cast(params, ctypes.c_void_p)
 
@@ -164,30 +137,198 @@ def collision_activate_decay_imag(
     return kramerskronig_fullintegrand(x, cauchyint, kramkronint)
 
 
-# import time
-# from src.utilities import kramerskronigfn, kramerskronig
+def inverse_screening_length(temperature, density):
+    fermi_energy = 0.5 * (3 * np.pi**2 * density) ** (2 / 3)
+    effective_temp = np.maximum(temperature, fermi_energy)
+    return np.sqrt(4 * np.pi * density / effective_temp)
 
-# x = np.linspace(1e-6, 9, 100)
-# x2 = np.linspace(1e-6, 9, 1000)
 
-# a = time.time()
-# kramerskronigfn(x, lambda y: collision_activate_decay(y, 0.1, 0.1, 10, 1e1))
-# print(f"function Kramers-Kronig: {time.time() - a} s")
+class BornLogPeak:
+    r"""
+    Approximate-Born inelastic collision frequency model.
 
-# a = time.time()
-# kramerskronig(x2, collision_activate_decay(x2, 0.1, 0.1, 10, 1e1))
-# print(f"array Kramers-Kronig: {time.time() - a} s")
+    The real part of the model is given by
+    .. math ::
 
-# a = time.time()
-# collision_activate_decay_imag(x, 0.1, 0.1, 10, 1e1)
-# print("function Kramers-Kronig, Cython LowLevelCallable: {} s",
-#   time.time() - a)
+        \mathrm{Re}\{\nu(\omega)\} = \frac{\nu_0}{1 + (\omega / b)^{3/2}}
+            + \frac{\nu_1}{1 + \exp(-\alpha (\omega - \omega_a))
+                + (\omega / \omega_a)^{p_1}}
 
-# a = time.time()
-# kramerskronigfn(
-#     x,
-#     lambda y: collision_models_cy.collision_activate_decay(
-#         y, 0.1, 0.1, 10, 1e1
-#     ),
-# )
-# print(f"function Kramers-Kronig, Cython: {time.time() - a} s")
+    where $b$ is chosen such that the first term (the approximate "Born" term)
+    integrates to the same value that the true Born collision frequency
+    integrates to, and ..math::`\nu_0, \nu_1, \alpha, \omega_a, p_1` are
+    parameters of the model. The second term represents inelastic collisions
+    left out of the Born model.
+
+    The imaginary part is determined from the Kramers-Kronig relations.
+
+    Parameters
+    ----------
+    temperature: float
+        Electron temperature, atomic units.
+    density: float
+        Electron density, atomic units.
+    chemicapot: float
+        Electron chemical potential, atomic units.
+    chargestate: float
+        Charge state/average ionization/Z star of the material at the current
+        electronic conditions.
+    """
+
+    def __init__(
+        self, temperature, density, chemicalpot, chargestate: float
+    ) -> None:
+        self.temperature = temperature
+        self.density = density
+        self.chemicalpot = chemicalpot
+        self.chargestate = chargestate
+
+    def pintegral_screening(self):
+        inv_screen_len = inverse_screening_length(
+            self.temperature, self.density
+        )
+
+        def integrand(p):
+            fermi_term = 1 / (
+                1 + np.exp((p**2 / 2 - self.chemicalpot) / self.temperature)
+            )
+            screeningterm = np.pi * np.arctan(
+                2 * p / inv_screen_len
+            ) - np.pi * 2 * p * inv_screen_len / (
+                2 * (4 * p**2 + inv_screen_len**2)
+            )
+            return p * fermi_term * screeningterm
+
+        # integrate
+        p1 = np.geomspace(1e-4, self.chemicalpot, 1000, endpoint=False)
+        p2 = np.geomspace(
+            self.chemicalpot,
+            np.sqrt(20 * self.temperature + 2 * np.abs(self.chemicalpot)),
+            1000,
+        )
+        p = np.concatenate((p1, p2))
+        return integrate.trapezoid(integrand(p), p)
+
+    def born_integral_screening(self):
+        return 4 * self.chargestate / (3 * np.pi) * self.pintegral_screening()
+
+    def born_width_sumrule_preserving(self, bornheight):
+        return (
+            3
+            * np.sqrt(3)
+            * self.born_integral_screening()
+            / bornheight
+            / (4 * np.pi)
+        )
+
+    def real(self, x: ArrayLike, params: ArrayLike) -> ArrayLike:
+        """
+        Real part of the collision frequency model.
+
+        Units are such that the output is in atomic units of inverse seconds.
+        """
+        return born_logpeak_model(
+            x,
+            born_height=params[0],
+            born_width=self.born_width_sumrule_preserving(params[0]),
+            logpeak_height=params[1],
+            logpeak_activate=params[2],
+            logpeak_gradient=params[3],
+            logpeak_decay=params[4],
+        )
+
+    def imag(self, x: ArrayLike, params: ArrayLike) -> ArrayLike:
+        """
+        Imaginary part of the collision frequency model.
+
+        Units are such that the output is in atomic units of inverse seconds.
+        """
+        return born_logpeak_model_imag(
+            x,
+            born_height=params[0],
+            born_width=self.born_width_integral_preserving(params[0]),
+            logpeak_height=params[1],
+            logpeak_activate=params[2],
+            logpeak_gradient=params[3],
+            logpeak_decay=params[4],
+        )
+
+    def __call__(self, x: ArrayLike, params: ArrayLike) -> ArrayLike:
+        """
+        Complex collision frequency.
+
+        Units are such that the output is in atomic units of inverse seconds.
+        """
+        return self.real(x, params) + 1j * self.imag(x, params)
+
+
+class ScreenedBorn:
+    """
+    Born collision frequency theory in the presence of electron-ion screening.
+
+    Uses the Born collision frequency with the Born-Yukawa scattering cross
+    section with an effective screening length.
+
+    Parameters
+    ----------
+    temperature: float
+        Electron temperature, atomic units.
+    density: float
+        Electron density, atomic units.
+    chemicapot: float
+        Electron chemical potential, atomic units.
+    chargestate: float
+        Charge state/average ionization/Z star of the material at the current
+        electronic conditions.
+    """
+
+    def __init__(self, temperature, density, chemicalpot, chargestate) -> None:
+        self.temperature = temperature
+        self.density = density
+        self.chemicalpot = chemicalpot
+        self.chargestate = chargestate
+        self.inv_screen_len = inverse_screening_length(temperature, density)
+
+    def _RPAimag(self, wavenum, freq):
+        a2 = (2 * freq - wavenum**2) ** 2 / (2 * wavenum) ** 2
+        b2 = (2 * freq + wavenum**2) ** 2 / (2 * wavenum) ** 2
+
+        numer = 1 + np.exp((self.chemicalpot - a2 / 2) / self.temperature)
+        denom = 1 + np.exp((self.chemicalpot - b2 / 2) / self.temperature)
+
+        return 2 * self.temperature / wavenum**3 * np.log(numer / denom)
+
+    def real(self, freq):
+        """
+        Real part of the collision frequency.
+
+        Units are such that the output is in atomic units of inverse seconds.
+        """
+
+        def integrand(wavenum):
+            return (
+                wavenum**6
+                / (wavenum**2 + self.inv_screen_len**2) ** 2
+                * self._RPAimag(wavenum, freq)
+            )
+
+        q = np.geomspace(1e-6, 1e3, 2000)
+        integral = integrate.trapezoid(integrand(q), q)
+
+        return 2 * self.chargestate * integral / (3 * np.pi * freq)
+
+    def imag(self, freq):
+        """
+        Imaginary part of the collision frequency.
+
+        Units are such that the output is in atomic units of inverse seconds.
+        """
+        return kramerskronig(freq, self.real)
+
+    def __call__(self, freq):
+        """
+        Complex collision frequency.
+
+        Units are such that the output is in atomic units of inverse seconds.
+        """
+        return self.real(freq) + 1j * self.imag(freq)

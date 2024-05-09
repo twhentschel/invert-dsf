@@ -1,13 +1,13 @@
 """Collision frequency models."""
 
-from libc.math cimport exp, fabs, pi
+from libc.math cimport exp
 
 
-cdef double logistic(
-    double x, double activate, double gradient
+cdef double logistic_peak(
+    double x, double activate, double gradient, double decay_power
  ) except *:
     """
-    Logistic function
+    Logistic function with a controllable decay term.
 
     Parameters:
     ___________
@@ -18,104 +18,109 @@ cdef double logistic(
     gradient: float
         The slope of the logistic function at `x` = `activate`. The larger this
         quantity, the faster the rise of this function.
+    decay_power: float
+        The power of the decay term, which governs the power law of the
+        function as x -> +infinity
     """
-    return 1 / (1 + exp(-gradient * (x - activate)))
+    return 1 / (
+        1 + exp(-gradient * (x - activate)) + (x / activate) ** decay_power
+    )
 
 
-cdef double gendrude(
-    double x, double center, double height, double power
+cdef double screened_born_approx(
+    double x, double height, double width
 ) except *:
     r"""
-    Generalized Drude collision frequency function where the power-law decay is
-    adjustable.
+    Function that has similar low- and high-frequency limits as the Born
+    collision frequency in the presence of electron-ion screening.
 
     Parameters:
     ___________
     x: array_like
         Argument of the function.
-    center: float
-        The location of the peak.
     height: float
         Height of the peak.
-    decay: float
-        The power at which the peak decays as :math: `|x| \rightarrow \infty`.
+    width: float
+        Controls the width of the peak.
     """
-    return height / (1.0 + fabs((x - center) / (pi * height)) ** power)
+    return height / (1.0 + (x / width) ** 1.5)
 
-cpdef double collision_activate_decay(
+
+cdef double born_logpeak_model(
     double x,
-    double lorentzian_height,
-    double lorentzian_powerlaw,
-    double logistic_activate,
-    double logistic_gradient
+    double born_height,
+    double born_width,
+    double logpeak_height,
+    double logpeak_activate,
+    double logpeak_gradient,
+    double logpeak_decay
 ) except *:
     """
     Collision frequency model that represents a generalized free electron
-    response and a possible bound electron - free electron interaction.
-    Similar to `collision_activate_decay` but neglects the first Drude
-    function, so there are only 4 parameters.
+    response and a possible inelastic interaction.
 
-    The free electron collision frequency is modeled as a modified Lorentzian/
-    Drude function (see `gendrude`), while the bound-free collision frequency
-    is modeled as a logistic function (see `logistic`).
+    The free electron collision frequency is modeled as a modified using an
+    approximation to the Born collision frequency (see `screened_born_approx`),
+    while the inelasatic collision frequency is modeled as a logistic-peak
+    function (see `logistic_peak`).
 
     Parameters:
     ___________
     x: array_like
         argument of the function
-    lorentzian_height: scalar
-        height of the Lorentzian peak
-    lorentzian_powerlaw: scalar
-        Power that the function follows as x -> infinity
-    logistic_activate: scalar
+    born_height: scalar
+        height of the Born function peak
+    born_width: scalar
+        Controls the width of the Born peak
+    logpeak_height: scalar
+        Height of the logistic function.
+    logpeak_activate: scalar
         Point at which the logistic function turns on.
-    logistic_gradient: scalar
+    logpeak_gradient: scalar
         How "fast" the logistic function turns on.
+    logpeak_decay: float
+        The power of the decay term, which governs the power law of the
+        function as x -> +infinity
     """
-    # forcing symmetry
-    # x = fabs(x)
     
-    lorentziancollisions = gendrude(
-        x, 0, lorentzian_height, lorentzian_powerlaw
+    borncollisions = screened_born_approx(x, born_height, born_width)
+    inelasticcollisions = logistic_peak(
+        x,
+        activate=logpeak_activate,
+        gradient=logpeak_gradient,
+        decay_power=logpeak_decay
     )
-    logisticcollisions = logistic(
-        x, activate=logistic_activate, gradient=logistic_gradient
-    )
 
-    return lorentziancollisions * logisticcollisions
-
-cdef double coll_act_decay_scipy(double x, void *user_data):
-    """ Lowlevel callback interface for `collision_activate_decay` for
-    scipy.integrate.quad
-
-    """
-    cdef double height = (<double *>user_data)[0]
-    cdef double powerlaw = (<double *>user_data)[1]
-    cdef double activate = (<double *>user_data)[2]
-    cdef double gradient = (<double *>user_data)[3]
-
-    return collision_activate_decay(x, height, powerlaw, activate, gradient)
+    return borncollisions + logpeak_height * inelasticcollisions
 
 cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):
     """ Alternate Lowlevel callback interface for scipy.integrate.quad, with
     the cauchy weight function to perform Kramers-Kronig integration.
     """
-    cdef double height = (<double *>user_data)[0]
-    cdef double powerlaw = (<double *>user_data)[1]
-    cdef double activate = (<double *>user_data)[2]
-    cdef double gradient = (<double *>user_data)[3]
+    cdef double height1 = (<double *>user_data)[0]
+    cdef double width = (<double *>user_data)[1]
+    cdef double height2 = (<double *>user_data)[2]
+    cdef double activate = (<double *>user_data)[3]
+    cdef double gradient = (<double *>user_data)[4]
+    cdef double decay = (<double *>user_data)[5]
     cdef double cauchyprinciplepoint = xx[1]
 
-    return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0] + xx[1])
+    return born_logpeak_model(
+        xx[0], height1, width, height2, activate, gradient, decay
+    ) / (xx[0] + xx[1])
 
 cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):
     """ Alternate Lowlevel callback interface for scipy.integrate.quad
     to perform Kramers-Kronig integration.
     """
-    cdef double height = (<double *>user_data)[0]
-    cdef double powerlaw = (<double *>user_data)[1]
-    cdef double activate = (<double *>user_data)[2]
-    cdef double gradient = (<double *>user_data)[3]
+    cdef double height1 = (<double *>user_data)[0]
+    cdef double width = (<double *>user_data)[1]
+    cdef double height2 = (<double *>user_data)[2]
+    cdef double activate = (<double *>user_data)[3]
+    cdef double gradient = (<double *>user_data)[4]
+    cdef double decay = (<double *>user_data)[5]
     cdef double cauchyprinciplepoint = xx[1]
 
-    return collision_activate_decay(xx[0], height, powerlaw, activate, gradient) / (xx[0]**2 - xx[1]**2)
+    return born_logpeak_model(
+        xx[0], height1, width, height2, activate, gradient, decay
+    ) / (xx[0]**2 - xx[1]**2)
