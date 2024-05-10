@@ -295,13 +295,26 @@ class ScreenedBorn:
         self.inv_screen_len = inverse_screening_length(temperature, density)
 
     def _RPAimag(self, wavenum, freq):
+        scalarfreq = False
+        if np.ndim(freq) == 0:
+            scalarfreq = True
+            freq = np.array(freq, ndmin=1)
+        if np.ndim(wavenum) == 0:
+            scalarfreq = True
+            wavenum = np.array(wavenum, ndmin=1)
+
+        wavenum, freq = np.meshgrid(wavenum, freq, copy=False, sparse=True)
         a2 = (2 * freq - wavenum**2) ** 2 / (2 * wavenum) ** 2
         b2 = (2 * freq + wavenum**2) ** 2 / (2 * wavenum) ** 2
 
         numer = 1 + np.exp((self.chemicalpot - a2 / 2) / self.temperature)
         denom = 1 + np.exp((self.chemicalpot - b2 / 2) / self.temperature)
 
-        return 2 * self.temperature / wavenum**3 * np.log(numer / denom)
+        result = 2 * self.temperature / wavenum**3 * np.log(numer / denom)
+
+        if scalarfreq:
+            return np.squeeze(result)
+        return result
 
     def real(self, freq):
         """
@@ -320,15 +333,26 @@ class ScreenedBorn:
         q = np.geomspace(1e-6, 1e3, 2000)
         integral = integrate.trapezoid(integrand(q), q)
 
-        return 2 * self.chargestate * integral / (3 * np.pi * freq)
+        return np.where(
+            freq == 0, 0, 2 * self.chargestate * integral / (3 * np.pi * freq)
+        )
 
     def imag(self, freq):
         """
         Imaginary part of the collision frequency.
 
+        Because the real part is expensive to call, it turns out to be cheaper
+        if we amortize the real part by interpolating it on a dense grid. The
+        functional form is pretty simple, and most of the action happens close
+        to zero, so we do this on a log-grid. However, this is not meant to be
+        a "finished-product", so make sure it works for your use case.
+
         Units are such that the output is in atomic units of inverse seconds.
         """
-        return kramerskronig(freq, self.real)
+        xx = np.geomspace(1e-4, 1e4, 3000)
+        r = self.real(xx)
+        i = kramerskronig(freq, lambda x: np.interp(x, xx, r))
+        return i
 
     def __call__(self, freq):
         """
