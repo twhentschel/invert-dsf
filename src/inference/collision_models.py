@@ -109,7 +109,7 @@ def born_logpeak_model_imag(
     logpeak_decay,
 ):
     """
-    Imaginary part of the `born_logistic_model` function, calculated using
+    Imaginary part of the `born_logpeak_model` function, calculated using
     the Kramers-Kronig transformation.
 
     Units are such that the output is in atomic units of inverse seconds.
