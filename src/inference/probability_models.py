@@ -117,6 +117,39 @@ class SoftCutoffLogLikelihood(LogProbabilityBase):
         return -np.max((residualeval / (np.sqrt(2) * self.cutoff)) ** 2)
 
 
+class SquaredExpLogLikelihood(LogProbabilityBase):
+    """Squared exponential log likelihood function"""
+
+    def __init__(
+        self,
+        ydata: ArrayLike,
+        x: ArrayLike,
+        model: Callable,
+        stddev: float = 0.01,
+        residualweight: str | ArrayLike = "abs",
+    ) -> None:
+        self.ydata = ydata
+        self.x = x
+        self.model = model
+
+        if stddev <= 0:
+            raise ValueError(
+                f"hyperparams {stddev} must be a positive and nonzero"
+                + " scalar."
+            )
+        self.stddev = stddev
+        self.residualweight = residualweight
+
+    def __call__(self, params: ArrayLike) -> float:
+        residualeval = residual(
+            self.model, self.x, self.ydata, params, self.residualweight
+        )
+
+        return (
+            -np.linalg.norm(residualeval / (np.sqrt(2) * self.stddev)) ** 2
+        )
+
+
 def residual(
     model: Callable,
     x: ArrayLike,
