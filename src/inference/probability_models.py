@@ -145,9 +145,7 @@ class SquaredExpLogLikelihood(LogProbabilityBase):
             self.model, self.x, self.ydata, params, self.residualweight
         )
 
-        return (
-            -np.linalg.norm(residualeval / (np.sqrt(2) * self.stddev)) ** 2
-        )
+        return -np.linalg.norm(residualeval / (np.sqrt(2) * self.stddev)) ** 2
 
 
 def residual(
