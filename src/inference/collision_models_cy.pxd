@@ -4,7 +4,7 @@ cdef double born_logpeak_model(
     double born_width,
     double logpeak_height,
     double logpeak_activate,
-    double logpeak_gradient,
+    double logpeak_growrate,
     double logpeak_decay
 )
 

@@ -4,7 +4,7 @@ from libc.math cimport exp, fabs
 
 
 cdef double logistic_peak(
-    double x, double activate, double gradient, double decay_power
+    double x, double activate, double growth_rate, double decay_power
  ) except *:
     """
     Logistic function with a controllable decay term.
@@ -15,15 +15,18 @@ cdef double logistic_peak(
         Argument of the function.
     activate: float
         The point at which the logistic function is 1/2.
-    gradient: float
-        The slope of the logistic function at `x` = `activate`. The larger this
-        quantity, the faster the rise of this function.
+    growth_rate: float
+        Roughly the rate of increase of the logistic function before
+        `x` = `activate`. The larger this quantity, the faster the rise of this
+        function.
     decay_power: float
         The power of the decay term, which governs the power law of the
         function as x -> +infinity
     """
     return 1 / (
-        1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power
+        1
+        + exp(-(x - activate) / growth_rate)
+        + fabs(x / activate) ** decay_power
     )
 
 
@@ -52,7 +55,7 @@ cdef double born_logpeak_model(
     double born_width,
     double logpeak_height,
     double logpeak_activate,
-    double logpeak_gradient,
+    double logpeak_growrate,
     double logpeak_decay
 ) except *:
     """
@@ -76,8 +79,8 @@ cdef double born_logpeak_model(
         Height of the logistic function.
     logpeak_activate: scalar
         Point at which the logistic function turns on.
-    logpeak_gradient: scalar
-        How "fast" the logistic function turns on.
+    logpeak_growrate: scalar
+        Rate of increase of the logistic function.
     logpeak_decay: float
         The power of the decay term, which governs the power law of the
         function as x -> +infinity
@@ -87,7 +90,7 @@ cdef double born_logpeak_model(
     inelasticcollisions = logistic_peak(
         x,
         activate=logpeak_activate,
-        gradient=logpeak_gradient,
+        growth_rate=logpeak_growrate,
         decay_power=logpeak_decay
     )
 
@@ -101,13 +104,13 @@ cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):
     cdef double width = (<double *>user_data)[1]
     cdef double height2 = (<double *>user_data)[2]
     cdef double activate = (<double *>user_data)[3]
-    cdef double gradient = (<double *>user_data)[4]
+    cdef double growth = (<double *>user_data)[4]
     cdef double decay = (<double *>user_data)[5]
     cdef double cauchyprinciplepoint = xx[1]
 
     return born_logpeak_model(
-        xx[0], height1, width, height2, activate, gradient, decay
-    ) / (xx[0] + xx[1])
+        xx[0], height1, width, height2, activate, growth, decay
+    ) / (xx[0] + cauchyprinciplepoint)
 
 cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):
     """ Alternate Lowlevel callback interface for scipy.integrate.quad
@@ -117,10 +120,10 @@ cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):
     cdef double width = (<double *>user_data)[1]
     cdef double height2 = (<double *>user_data)[2]
     cdef double activate = (<double *>user_data)[3]
-    cdef double gradient = (<double *>user_data)[4]
+    cdef double growth = (<double *>user_data)[4]
     cdef double decay = (<double *>user_data)[5]
     cdef double cauchyprinciplepoint = xx[1]
 
     return born_logpeak_model(
-        xx[0], height1, width, height2, activate, gradient, decay
-    ) / (xx[0]**2 - xx[1]**2)
+        xx[0], height1, width, height2, activate, growth, decay
+    ) / (xx[0]**2 - cauchyprinciplepoint**2)

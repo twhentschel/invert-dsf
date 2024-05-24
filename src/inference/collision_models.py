@@ -9,7 +9,7 @@ from src.inference import collision_models_cy
 from src.utilities import kramerskronig_fullintegrand, kramerskronig
 
 
-def logistic_peak(x, activate=0, gradient=1, decay_power=0):
+def logistic_peak(x, activate=0, growth_rate=1, decay_power=0):
     """
     Logistic function with a controllable decay term.
 
@@ -19,15 +19,18 @@ def logistic_peak(x, activate=0, gradient=1, decay_power=0):
         Argument of the function.
     activate: float
         The point at which the logistic function is 1/2.
-    gradient: float
-        The slope of the logistic function at `x` = `activate`. The larger this
-        quantity, the faster the rise of this function.
+    growth_rate: float
+        Roughly the rate of increase of the logistic function before
+        `x` = `activate`. The larger this quantity, the slower the rise of this
+        function.
     decay_power: float
         The power of the decay term, which governs the power law of the
         function as x -> +infinity
     """
     return 1 / (
-        1 + np.exp(-gradient * (x - activate)) + (x / activate) ** decay_power
+        1
+        + np.exp(-(x - activate) / growth_rate)
+        + np.abs(x / activate) ** decay_power
     )
 
 
@@ -55,7 +58,7 @@ def born_logpeak_model(
     born_width,
     logpeak_height,
     logpeak_activate,
-    logpeak_gradient,
+    logpeak_growrate,
     logpeak_decay,
 ):
     """
@@ -81,8 +84,8 @@ def born_logpeak_model(
         Height of the logistic function.
     logpeak_activate: scalar
         Point at which the logistic function turns on.
-    logpeak_gradient: scalar
-        How "fast" the logistic function turns on.
+    logpeak_growrate: scalar
+        The rate at which the logistic function turns on.
     logpeak_decay: float
         The power of the decay term, which governs the power law of the
         function as x -> +infinity
@@ -92,7 +95,7 @@ def born_logpeak_model(
     inelasticcollisions = logistic_peak(
         x,
         activate=logpeak_activate,
-        gradient=logpeak_gradient,
+        gradient=logpeak_growrate,
         decay_power=logpeak_decay,
     )
 
@@ -105,7 +108,7 @@ def born_logpeak_model_imag(
     born_width,
     logpeak_height,
     logpeak_activate,
-    logpeak_gradient,
+    logpeak_growrate,
     logpeak_decay,
 ):
     """
@@ -122,7 +125,7 @@ def born_logpeak_model_imag(
         born_width,
         logpeak_height,
         logpeak_activate,
-        logpeak_gradient,
+        logpeak_growrate,
         logpeak_decay,
     )
     user_data = ctypes.cast(params, ctypes.c_void_p)
@@ -238,7 +241,7 @@ class BornLogPeak:
             born_width=self.approx_born_width_integral_preserving(params[0]),
             logpeak_height=params[1],
             logpeak_activate=params[2],
-            logpeak_gradient=params[3],
+            logpeak_growrate=params[3],
             logpeak_decay=params[4],
         )
 
@@ -254,7 +257,7 @@ class BornLogPeak:
             born_width=self.approx_born_width_integral_preserving(params[0]),
             logpeak_height=params[1],
             logpeak_activate=params[2],
-            logpeak_gradient=params[3],
+            logpeak_growrate=params[3],
             logpeak_decay=params[4],
         )
 

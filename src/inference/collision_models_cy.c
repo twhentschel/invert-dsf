@@ -1994,61 +1994,74 @@ static int __pyx_m_traverse(PyObject *m, visitproc visit, void *arg) {
  * 
  * 
  * cdef double logistic_peak(             # <<<<<<<<<<<<<<
- *     double x, double activate, double gradient, double decay_power
+ *     double x, double activate, double growth_rate, double decay_power
  *  ) except *:
  */
 
-static double __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(double __pyx_v_x, double __pyx_v_activate, double __pyx_v_gradient, double __pyx_v_decay_power) {
+static double __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(double __pyx_v_x, double __pyx_v_activate, double __pyx_v_growth_rate, double __pyx_v_decay_power) {
   double __pyx_r;
   __pyx_t_double_complex __pyx_t_1;
-  __pyx_t_double_complex __pyx_t_2;
-  double __pyx_t_3;
+  double __pyx_t_2;
+  __pyx_t_double_complex __pyx_t_3;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/inference/collision_models_cy.pyx":25
+  /* "src/inference/collision_models_cy.pyx":26
  *         function as x -> +infinity
  *     """
  *     return 1 / (             # <<<<<<<<<<<<<<
- *         1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power
- *     )
+ *         1
+ *         + exp(-(x - activate) / growth_rate)
  */
   __pyx_t_1 = __pyx_t_double_complex_from_parts(1, 0);
 
-  /* "src/inference/collision_models_cy.pyx":26
- *     """
+  /* "src/inference/collision_models_cy.pyx":28
  *     return 1 / (
- *         1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power             # <<<<<<<<<<<<<<
+ *         1
+ *         + exp(-(x - activate) / growth_rate)             # <<<<<<<<<<<<<<
+ *         + fabs(x / activate) ** decay_power
+ *     )
+ */
+  __pyx_t_2 = (-(__pyx_v_x - __pyx_v_activate));
+  if (unlikely(__pyx_v_growth_rate == 0)) {
+    PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+    __PYX_ERR(0, 28, __pyx_L1_error)
+  }
+
+  /* "src/inference/collision_models_cy.pyx":29
+ *         1
+ *         + exp(-(x - activate) / growth_rate)
+ *         + fabs(x / activate) ** decay_power             # <<<<<<<<<<<<<<
  *     )
  * 
  */
   if (unlikely(__pyx_v_activate == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 26, __pyx_L1_error)
+    __PYX_ERR(0, 29, __pyx_L1_error)
   }
-  __pyx_t_2 = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts((1.0 + exp(((-__pyx_v_gradient) * (__pyx_v_x - __pyx_v_activate)))), 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(fabs((__pyx_v_x / __pyx_v_activate)), 0), __pyx_t_double_complex_from_parts(__pyx_v_decay_power, 0)));
+  __pyx_t_3 = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts((1.0 + exp((__pyx_t_2 / __pyx_v_growth_rate))), 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(fabs((__pyx_v_x / __pyx_v_activate)), 0), __pyx_t_double_complex_from_parts(__pyx_v_decay_power, 0)));
 
-  /* "src/inference/collision_models_cy.pyx":25
+  /* "src/inference/collision_models_cy.pyx":26
  *         function as x -> +infinity
  *     """
  *     return 1 / (             # <<<<<<<<<<<<<<
- *         1 + exp(-gradient * (x - activate)) + fabs(x / activate) ** decay_power
- *     )
+ *         1
+ *         + exp(-(x - activate) / growth_rate)
  */
-  if (unlikely(__Pyx_c_is_zero_double(__pyx_t_2))) {
+  if (unlikely(__Pyx_c_is_zero_double(__pyx_t_3))) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 25, __pyx_L1_error)
+    __PYX_ERR(0, 26, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_1, __pyx_t_2), 1); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 25, __pyx_L1_error)
-  __pyx_r = __pyx_t_3;
+  __pyx_t_2 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_1, __pyx_t_3), 1); if (unlikely(__pyx_t_2 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 26, __pyx_L1_error)
+  __pyx_r = __pyx_t_2;
   goto __pyx_L0;
 
   /* "src/inference/collision_models_cy.pyx":6
  * 
  * 
  * cdef double logistic_peak(             # <<<<<<<<<<<<<<
- *     double x, double activate, double gradient, double decay_power
+ *     double x, double activate, double growth_rate, double decay_power
  *  ) except *:
  */
 
@@ -2060,7 +2073,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(double
   return __pyx_r;
 }
 
-/* "src/inference/collision_models_cy.pyx":30
+/* "src/inference/collision_models_cy.pyx":33
  * 
  * 
  * cdef double screened_born_approx(             # <<<<<<<<<<<<<<
@@ -2077,7 +2090,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/inference/collision_models_cy.pyx":46
+  /* "src/inference/collision_models_cy.pyx":49
  *         Controls the width of the peak.
  *     """
  *     return height / (1.0 + fabs(x / width) ** 1.5)             # <<<<<<<<<<<<<<
@@ -2087,18 +2100,18 @@ static double __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx
   __pyx_t_1 = __pyx_t_double_complex_from_parts(__pyx_v_height, 0);
   if (unlikely(__pyx_v_width == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 46, __pyx_L1_error)
+    __PYX_ERR(0, 49, __pyx_L1_error)
   }
   __pyx_t_2 = __Pyx_c_sum_double(__pyx_t_double_complex_from_parts(1.0, 0), __Pyx_c_pow_double(__pyx_t_double_complex_from_parts(fabs((__pyx_v_x / __pyx_v_width)), 0), __pyx_t_double_complex_from_parts(1.5, 0)));
   if (unlikely(__Pyx_c_is_zero_double(__pyx_t_2))) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 46, __pyx_L1_error)
+    __PYX_ERR(0, 49, __pyx_L1_error)
   }
-  __pyx_t_3 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_1, __pyx_t_2), 1); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 46, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_SoftComplexToDouble(__Pyx_c_quot_double(__pyx_t_1, __pyx_t_2), 1); if (unlikely(__pyx_t_3 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 49, __pyx_L1_error)
   __pyx_r = __pyx_t_3;
   goto __pyx_L0;
 
-  /* "src/inference/collision_models_cy.pyx":30
+  /* "src/inference/collision_models_cy.pyx":33
  * 
  * 
  * cdef double screened_born_approx(             # <<<<<<<<<<<<<<
@@ -2114,7 +2127,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx
   return __pyx_r;
 }
 
-/* "src/inference/collision_models_cy.pyx":49
+/* "src/inference/collision_models_cy.pyx":52
  * 
  * 
  * cdef double born_logpeak_model(             # <<<<<<<<<<<<<<
@@ -2122,7 +2135,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx
  *     double born_height,
  */
 
-static double __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model(double __pyx_v_x, double __pyx_v_born_height, double __pyx_v_born_width, double __pyx_v_logpeak_height, double __pyx_v_logpeak_activate, double __pyx_v_logpeak_gradient, double __pyx_v_logpeak_decay) {
+static double __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model(double __pyx_v_x, double __pyx_v_born_height, double __pyx_v_born_width, double __pyx_v_logpeak_height, double __pyx_v_logpeak_activate, double __pyx_v_logpeak_growrate, double __pyx_v_logpeak_decay) {
   double __pyx_v_borncollisions;
   double __pyx_v_inelasticcollisions;
   double __pyx_r;
@@ -2131,27 +2144,27 @@ static double __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model(d
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/inference/collision_models_cy.pyx":86
+  /* "src/inference/collision_models_cy.pyx":89
  *     """
  * 
  *     borncollisions = screened_born_approx(x, born_height, born_width)             # <<<<<<<<<<<<<<
  *     inelasticcollisions = logistic_peak(
  *         x,
  */
-  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx(__pyx_v_x, __pyx_v_born_height, __pyx_v_born_width); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 86, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_screened_born_approx(__pyx_v_x, __pyx_v_born_height, __pyx_v_born_width); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 89, __pyx_L1_error)
   __pyx_v_borncollisions = __pyx_t_1;
 
-  /* "src/inference/collision_models_cy.pyx":87
+  /* "src/inference/collision_models_cy.pyx":90
  * 
  *     borncollisions = screened_born_approx(x, born_height, born_width)
  *     inelasticcollisions = logistic_peak(             # <<<<<<<<<<<<<<
  *         x,
  *         activate=logpeak_activate,
  */
-  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(__pyx_v_x, __pyx_v_logpeak_activate, __pyx_v_logpeak_gradient, __pyx_v_logpeak_decay); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 87, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_logistic_peak(__pyx_v_x, __pyx_v_logpeak_activate, __pyx_v_logpeak_growrate, __pyx_v_logpeak_decay); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 90, __pyx_L1_error)
   __pyx_v_inelasticcollisions = __pyx_t_1;
 
-  /* "src/inference/collision_models_cy.pyx":94
+  /* "src/inference/collision_models_cy.pyx":97
  *     )
  * 
  *     return borncollisions + logpeak_height * inelasticcollisions             # <<<<<<<<<<<<<<
@@ -2161,7 +2174,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model(d
   __pyx_r = (__pyx_v_borncollisions + (__pyx_v_logpeak_height * __pyx_v_inelasticcollisions));
   goto __pyx_L0;
 
-  /* "src/inference/collision_models_cy.pyx":49
+  /* "src/inference/collision_models_cy.pyx":52
  * 
  * 
  * cdef double born_logpeak_model(             # <<<<<<<<<<<<<<
@@ -2177,7 +2190,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model(d
   return __pyx_r;
 }
 
-/* "src/inference/collision_models_cy.pyx":96
+/* "src/inference/collision_models_cy.pyx":99
  *     return borncollisions + logpeak_height * inelasticcollisions
  * 
  * cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
@@ -2190,9 +2203,9 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integra
   double __pyx_v_width;
   double __pyx_v_height2;
   double __pyx_v_activate;
-  double __pyx_v_gradient;
+  double __pyx_v_growth;
   double __pyx_v_decay;
-  CYTHON_UNUSED double __pyx_v_cauchyprinciplepoint;
+  double __pyx_v_cauchyprinciplepoint;
   double __pyx_r;
   double __pyx_t_1;
   double __pyx_t_2;
@@ -2200,7 +2213,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integra
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/inference/collision_models_cy.pyx":100
+  /* "src/inference/collision_models_cy.pyx":103
  *     the cauchy weight function to perform Kramers-Kronig integration.
  *     """
  *     cdef double height1 = (<double *>user_data)[0]             # <<<<<<<<<<<<<<
@@ -2209,7 +2222,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integra
  */
   __pyx_v_height1 = (((double *)__pyx_v_user_data)[0]);
 
-  /* "src/inference/collision_models_cy.pyx":101
+  /* "src/inference/collision_models_cy.pyx":104
  *     """
  *     cdef double height1 = (<double *>user_data)[0]
  *     cdef double width = (<double *>user_data)[1]             # <<<<<<<<<<<<<<
@@ -2218,44 +2231,44 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integra
  */
   __pyx_v_width = (((double *)__pyx_v_user_data)[1]);
 
-  /* "src/inference/collision_models_cy.pyx":102
+  /* "src/inference/collision_models_cy.pyx":105
  *     cdef double height1 = (<double *>user_data)[0]
  *     cdef double width = (<double *>user_data)[1]
  *     cdef double height2 = (<double *>user_data)[2]             # <<<<<<<<<<<<<<
  *     cdef double activate = (<double *>user_data)[3]
- *     cdef double gradient = (<double *>user_data)[4]
+ *     cdef double growth = (<double *>user_data)[4]
  */
   __pyx_v_height2 = (((double *)__pyx_v_user_data)[2]);
 
-  /* "src/inference/collision_models_cy.pyx":103
+  /* "src/inference/collision_models_cy.pyx":106
  *     cdef double width = (<double *>user_data)[1]
  *     cdef double height2 = (<double *>user_data)[2]
  *     cdef double activate = (<double *>user_data)[3]             # <<<<<<<<<<<<<<
- *     cdef double gradient = (<double *>user_data)[4]
+ *     cdef double growth = (<double *>user_data)[4]
  *     cdef double decay = (<double *>user_data)[5]
  */
   __pyx_v_activate = (((double *)__pyx_v_user_data)[3]);
 
-  /* "src/inference/collision_models_cy.pyx":104
+  /* "src/inference/collision_models_cy.pyx":107
  *     cdef double height2 = (<double *>user_data)[2]
  *     cdef double activate = (<double *>user_data)[3]
- *     cdef double gradient = (<double *>user_data)[4]             # <<<<<<<<<<<<<<
+ *     cdef double growth = (<double *>user_data)[4]             # <<<<<<<<<<<<<<
  *     cdef double decay = (<double *>user_data)[5]
  *     cdef double cauchyprinciplepoint = xx[1]
  */
-  __pyx_v_gradient = (((double *)__pyx_v_user_data)[4]);
+  __pyx_v_growth = (((double *)__pyx_v_user_data)[4]);
 
-  /* "src/inference/collision_models_cy.pyx":105
+  /* "src/inference/collision_models_cy.pyx":108
  *     cdef double activate = (<double *>user_data)[3]
- *     cdef double gradient = (<double *>user_data)[4]
+ *     cdef double growth = (<double *>user_data)[4]
  *     cdef double decay = (<double *>user_data)[5]             # <<<<<<<<<<<<<<
  *     cdef double cauchyprinciplepoint = xx[1]
  * 
  */
   __pyx_v_decay = (((double *)__pyx_v_user_data)[5]);
 
-  /* "src/inference/collision_models_cy.pyx":106
- *     cdef double gradient = (<double *>user_data)[4]
+  /* "src/inference/collision_models_cy.pyx":109
+ *     cdef double growth = (<double *>user_data)[4]
  *     cdef double decay = (<double *>user_data)[5]
  *     cdef double cauchyprinciplepoint = xx[1]             # <<<<<<<<<<<<<<
  * 
@@ -2263,31 +2276,31 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integra
  */
   __pyx_v_cauchyprinciplepoint = (__pyx_v_xx[1]);
 
-  /* "src/inference/collision_models_cy.pyx":108
+  /* "src/inference/collision_models_cy.pyx":111
  *     cdef double cauchyprinciplepoint = xx[1]
  * 
  *     return born_logpeak_model(             # <<<<<<<<<<<<<<
- *         xx[0], height1, width, height2, activate, gradient, decay
- *     ) / (xx[0] + xx[1])
+ *         xx[0], height1, width, height2, activate, growth, decay
+ *     ) / (xx[0] + cauchyprinciplepoint)
  */
-  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model((__pyx_v_xx[0]), __pyx_v_height1, __pyx_v_width, __pyx_v_height2, __pyx_v_activate, __pyx_v_gradient, __pyx_v_decay); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 108, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model((__pyx_v_xx[0]), __pyx_v_height1, __pyx_v_width, __pyx_v_height2, __pyx_v_activate, __pyx_v_growth, __pyx_v_decay); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 111, __pyx_L1_error)
 
-  /* "src/inference/collision_models_cy.pyx":110
+  /* "src/inference/collision_models_cy.pyx":113
  *     return born_logpeak_model(
- *         xx[0], height1, width, height2, activate, gradient, decay
- *     ) / (xx[0] + xx[1])             # <<<<<<<<<<<<<<
+ *         xx[0], height1, width, height2, activate, growth, decay
+ *     ) / (xx[0] + cauchyprinciplepoint)             # <<<<<<<<<<<<<<
  * 
  * cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):
  */
-  __pyx_t_2 = ((__pyx_v_xx[0]) + (__pyx_v_xx[1]));
+  __pyx_t_2 = ((__pyx_v_xx[0]) + __pyx_v_cauchyprinciplepoint);
   if (unlikely(__pyx_t_2 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 110, __pyx_L1_error)
+    __PYX_ERR(0, 113, __pyx_L1_error)
   }
   __pyx_r = (__pyx_t_1 / __pyx_t_2);
   goto __pyx_L0;
 
-  /* "src/inference/collision_models_cy.pyx":96
+  /* "src/inference/collision_models_cy.pyx":99
  *     return borncollisions + logpeak_height * inelasticcollisions
  * 
  * cdef double scipy_cauchy_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
@@ -2303,8 +2316,8 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_cauchy_integra
   return __pyx_r;
 }
 
-/* "src/inference/collision_models_cy.pyx":112
- *     ) / (xx[0] + xx[1])
+/* "src/inference/collision_models_cy.pyx":115
+ *     ) / (xx[0] + cauchyprinciplepoint)
  * 
  * cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
  *     """ Alternate Lowlevel callback interface for scipy.integrate.quad
@@ -2316,9 +2329,9 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_kramerskronig_
   double __pyx_v_width;
   double __pyx_v_height2;
   double __pyx_v_activate;
-  double __pyx_v_gradient;
+  double __pyx_v_growth;
   double __pyx_v_decay;
-  CYTHON_UNUSED double __pyx_v_cauchyprinciplepoint;
+  double __pyx_v_cauchyprinciplepoint;
   double __pyx_r;
   double __pyx_t_1;
   double __pyx_t_2;
@@ -2326,7 +2339,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_kramerskronig_
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
 
-  /* "src/inference/collision_models_cy.pyx":116
+  /* "src/inference/collision_models_cy.pyx":119
  *     to perform Kramers-Kronig integration.
  *     """
  *     cdef double height1 = (<double *>user_data)[0]             # <<<<<<<<<<<<<<
@@ -2335,7 +2348,7 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_kramerskronig_
  */
   __pyx_v_height1 = (((double *)__pyx_v_user_data)[0]);
 
-  /* "src/inference/collision_models_cy.pyx":117
+  /* "src/inference/collision_models_cy.pyx":120
  *     """
  *     cdef double height1 = (<double *>user_data)[0]
  *     cdef double width = (<double *>user_data)[1]             # <<<<<<<<<<<<<<
@@ -2344,44 +2357,44 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_kramerskronig_
  */
   __pyx_v_width = (((double *)__pyx_v_user_data)[1]);
 
-  /* "src/inference/collision_models_cy.pyx":118
+  /* "src/inference/collision_models_cy.pyx":121
  *     cdef double height1 = (<double *>user_data)[0]
  *     cdef double width = (<double *>user_data)[1]
  *     cdef double height2 = (<double *>user_data)[2]             # <<<<<<<<<<<<<<
  *     cdef double activate = (<double *>user_data)[3]
- *     cdef double gradient = (<double *>user_data)[4]
+ *     cdef double growth = (<double *>user_data)[4]
  */
   __pyx_v_height2 = (((double *)__pyx_v_user_data)[2]);
 
-  /* "src/inference/collision_models_cy.pyx":119
+  /* "src/inference/collision_models_cy.pyx":122
  *     cdef double width = (<double *>user_data)[1]
  *     cdef double height2 = (<double *>user_data)[2]
  *     cdef double activate = (<double *>user_data)[3]             # <<<<<<<<<<<<<<
- *     cdef double gradient = (<double *>user_data)[4]
+ *     cdef double growth = (<double *>user_data)[4]
  *     cdef double decay = (<double *>user_data)[5]
  */
   __pyx_v_activate = (((double *)__pyx_v_user_data)[3]);
 
-  /* "src/inference/collision_models_cy.pyx":120
+  /* "src/inference/collision_models_cy.pyx":123
  *     cdef double height2 = (<double *>user_data)[2]
  *     cdef double activate = (<double *>user_data)[3]
- *     cdef double gradient = (<double *>user_data)[4]             # <<<<<<<<<<<<<<
+ *     cdef double growth = (<double *>user_data)[4]             # <<<<<<<<<<<<<<
  *     cdef double decay = (<double *>user_data)[5]
  *     cdef double cauchyprinciplepoint = xx[1]
  */
-  __pyx_v_gradient = (((double *)__pyx_v_user_data)[4]);
+  __pyx_v_growth = (((double *)__pyx_v_user_data)[4]);
 
-  /* "src/inference/collision_models_cy.pyx":121
+  /* "src/inference/collision_models_cy.pyx":124
  *     cdef double activate = (<double *>user_data)[3]
- *     cdef double gradient = (<double *>user_data)[4]
+ *     cdef double growth = (<double *>user_data)[4]
  *     cdef double decay = (<double *>user_data)[5]             # <<<<<<<<<<<<<<
  *     cdef double cauchyprinciplepoint = xx[1]
  * 
  */
   __pyx_v_decay = (((double *)__pyx_v_user_data)[5]);
 
-  /* "src/inference/collision_models_cy.pyx":122
- *     cdef double gradient = (<double *>user_data)[4]
+  /* "src/inference/collision_models_cy.pyx":125
+ *     cdef double growth = (<double *>user_data)[4]
  *     cdef double decay = (<double *>user_data)[5]
  *     cdef double cauchyprinciplepoint = xx[1]             # <<<<<<<<<<<<<<
  * 
@@ -2389,30 +2402,30 @@ static double __pyx_f_3src_9inference_19collision_models_cy_scipy_kramerskronig_
  */
   __pyx_v_cauchyprinciplepoint = (__pyx_v_xx[1]);
 
-  /* "src/inference/collision_models_cy.pyx":124
+  /* "src/inference/collision_models_cy.pyx":127
  *     cdef double cauchyprinciplepoint = xx[1]
  * 
  *     return born_logpeak_model(             # <<<<<<<<<<<<<<
- *         xx[0], height1, width, height2, activate, gradient, decay
- *     ) / (xx[0]**2 - xx[1]**2)
+ *         xx[0], height1, width, height2, activate, growth, decay
+ *     ) / (xx[0]**2 - cauchyprinciplepoint**2)
  */
-  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model((__pyx_v_xx[0]), __pyx_v_height1, __pyx_v_width, __pyx_v_height2, __pyx_v_activate, __pyx_v_gradient, __pyx_v_decay); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 124, __pyx_L1_error)
+  __pyx_t_1 = __pyx_f_3src_9inference_19collision_models_cy_born_logpeak_model((__pyx_v_xx[0]), __pyx_v_height1, __pyx_v_width, __pyx_v_height2, __pyx_v_activate, __pyx_v_growth, __pyx_v_decay); if (unlikely(__pyx_t_1 == ((double)-1) && PyErr_Occurred())) __PYX_ERR(0, 127, __pyx_L1_error)
 
-  /* "src/inference/collision_models_cy.pyx":126
+  /* "src/inference/collision_models_cy.pyx":129
  *     return born_logpeak_model(
- *         xx[0], height1, width, height2, activate, gradient, decay
- *     ) / (xx[0]**2 - xx[1]**2)             # <<<<<<<<<<<<<<
+ *         xx[0], height1, width, height2, activate, growth, decay
+ *     ) / (xx[0]**2 - cauchyprinciplepoint**2)             # <<<<<<<<<<<<<<
  */
-  __pyx_t_2 = (pow((__pyx_v_xx[0]), 2.0) - pow((__pyx_v_xx[1]), 2.0));
+  __pyx_t_2 = (pow((__pyx_v_xx[0]), 2.0) - pow(__pyx_v_cauchyprinciplepoint, 2.0));
   if (unlikely(__pyx_t_2 == 0)) {
     PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-    __PYX_ERR(0, 126, __pyx_L1_error)
+    __PYX_ERR(0, 129, __pyx_L1_error)
   }
   __pyx_r = (__pyx_t_1 / __pyx_t_2);
   goto __pyx_L0;
 
-  /* "src/inference/collision_models_cy.pyx":112
- *     ) / (xx[0] + xx[1])
+  /* "src/inference/collision_models_cy.pyx":115
+ *     ) / (xx[0] + cauchyprinciplepoint)
  * 
  * cdef double scipy_kramerskronig_integrand(int n, double *xx, void *user_data):             # <<<<<<<<<<<<<<
  *     """ Alternate Lowlevel callback interface for scipy.integrate.quad
