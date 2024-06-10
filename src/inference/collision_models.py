@@ -65,7 +65,7 @@ def born_logpeak_model(
     Collision frequency model that represents a generalized free electron
     response and a possible inelastic interaction.
 
-    The free electron collision frequency is modeled as a modified using an
+    The free electron collision frequency is modeled using an
     approximation to the Born collision frequency (see `screened_born_approx`),
     while the inelasatic collision frequency is modeled as a logistic-peak
     function (see `logistic_peak`).
