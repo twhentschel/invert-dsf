@@ -95,7 +95,7 @@ def born_logpeak_model(
     inelasticcollisions = logistic_peak(
         x,
         activate=logpeak_activate,
-        gradient=logpeak_growrate,
+        growth_rate=logpeak_growrate,
         decay_power=logpeak_decay,
     )
 
