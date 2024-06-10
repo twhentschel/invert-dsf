@@ -81,7 +81,7 @@ def kramerskronig(x: ArrayLike, funcreal: Callable) -> ArrayLike:
     """Compute Kramers-Kroning transformation
 
     Kramers-Kronig transform where the real part is a function, not an
-    array like in `kramerskronig()`. Uses an adaptive quadrature approach
+    array like in `kramerskronig_arr()`. Uses an adaptive quadrature approach
     to compute the Cauchy principle value integral.
 
     The real part is assumed to be a symmetric function.

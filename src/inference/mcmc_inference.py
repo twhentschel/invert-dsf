@@ -88,9 +88,11 @@ def inference_loop(
 
     return sampler
 
+
 def dataset_exists(filename, dataset_name):
-    with h5py.File(filename, 'r') as f:
+    with h5py.File(filename, "r") as f:
         return dataset_name in f
+
 
 def unique_hdf5_group(file: str, group: str, sep: str = "-") -> str:
     """Returns a unique group in the HDF5 file `file`.
