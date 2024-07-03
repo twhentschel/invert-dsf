@@ -119,7 +119,7 @@ if __name__ == "__main__":
     # store collision rate params as info
     collision_info = (
         "\nCollision Frequency Parameters:\n"
-        + params
+        + str(params)
         + "\n"
         + f"Function: {BornLogPeak.__name__}\n"
     )
