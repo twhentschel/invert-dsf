@@ -1,3 +1,5 @@
+[![Uses the Cookiecutter Data Science project template](https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter)](https://cookiecutter-data-science.drivendata.org/)
+
 # Invert DSF
 
 The dynamic structure factor (DSF) describes electronic density correlations in a material, and is measured in X-ray Thomson
@@ -38,7 +40,52 @@ approach is that, since we have a posterior distribution for $\nu(\omega)$, we c
 associated with our inferred collision frequency.
 
 
+## Installation
+The primary reason to install this project is to reproduce my analysis, with the analysis taking place entirely with the provided jupyter notebooks.
+This has only been tested on Linux (Ubuntu 20.04).
 
+---
+> **NOTE**: Most of the data files for the DSF data and existing collision frequency model data used in the analysis are not actually included in the repository.
+This is because most of this data is not mine (@twhentschel), and I'm unsure of the protocal of hosting this data on a site like Github.
+However, I would be happy to share this data for reasonable requests!
+
+### Download the repository and install the dependencies
+First, clone the repository
+```
+git clone https://github.com/twhentschel/invert-dsf.git
+```
+This creates a directory called `invert-dsf`. Go into that directory and create an environment using the command
+```
+make create_environment
+```
+This defaults to conda environment called `invert-dsf` if `conda` is installed. Otherwise, it uses `virtualenv` to handle the environment. Test the environment
+```
+make test_environment
+```
+Now, activate the environment
+```
+conda activate invert-dsf
+```
+and then install the dependencies of the project
+```
+make requirements
+```
+You can also run tests on the source code with
+```
+make test_src
+```
+You can all the make options by simply entering `make`.
+
+### Run the notebooks
+Once we have the environment set up and activated, we can start running the notebooks. The notebooks are saved as markdown files using `jupytext` to facilitate easier source control. To use the jupyter notebooks,
+open jupyter lab 
+```
+python -m jupyter lab
+```
+and open the markdown files with Notebook:
+![image](https://github.com/twhentschel/invert-dsf/assets/49924808/d6746b4b-5802-4fed-a93a-0824a55ee1e1)
+
+(to deactivate the conda environment, run `conda deactivate`).
 
 Project Organization
 ------------
@@ -90,5 +137,3 @@ Project Organization
 --------
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
-
-[![Uses the Cookiecutter Data Science project template](https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter)](https://cookiecutter-data-science.drivendata.org/)
