@@ -20,17 +20,17 @@ class MerminELFData:
         density: float,
         wavenum: ArrayLike,
         frequency: ArrayLike,
-        collisonrate: Callable = None,
+        collisonfreq: Callable = None,
     ) -> None:
         self.electronparams = ElectronGas(temperature, density)
         self.wavenum = wavenum
         self.frequency = frequency
-        self.collisionrate = collisonrate
+        self.collisionfreq = collisonfreq
         self.ELF = elec_loss_fn(
             Mermin(self.electronparams),
             self.wavenum,
             self.frequency,
-            collisonrate,
+            collisonfreq,
         )
 
     def writedata(self, filename, info=""):
@@ -53,7 +53,7 @@ class MerminELFData:
         # if len(self.wavenum) = m and len(self.frequency) = n, then
         # self.ELF.shape = (m, n)
         # we will also append collision rate data for saving
-        collisiondata = self.collisionrate(self.frequency)
+        collisiondata = self.collisionfreq(self.frequency)
         ELFdata = np.vstack((collisiondata.real, collisiondata.imag, self.ELF))
         # store transpose ELFdata so columns correspond to wave numbers
         data = pd.DataFrame(
@@ -74,7 +74,7 @@ class MerminELFData:
             + f"temperature (eV): {temp:.3f}\n"
             + f"density (1/Angstrom^3): {den:.6f}\n\n"
             + "The first column is the frequency (eV), the second and third\n"
-            + "are the real and imaginary parts of the collision rate (a.u.)\n"
+            + "are the real and imaginary parts of the collision frequency/rate (a.u.)\n"
             + "(as a function of the frequency) and the rest are the\n"
             + "values of the ELF for each wave number q (1/Angstrom) \n\n"
         )
@@ -86,11 +86,7 @@ class MerminELFData:
 
 
 if __name__ == "__main__":
-    from src.inference.collision_models import (
-        collision_activate_decay,
-        collision_activate_decay_imag,
-    )
-    import json
+    from src.inference.collision_models import BornLogPeak
 
     # thermal energy (kBT) in eV
     t_eV = 1  # [eV]
@@ -103,36 +99,29 @@ if __name__ == "__main__":
     # convert to atomic units (convert [angstrom] to [cm] first)
     d = den_cc * (AtomicUnits.length * 10**-8) ** 3  # [au]
 
+    # ionization state
+    Z = 3
+
     # wave numbers
     q = np.asarray([0.5, 1, 1.5])  # [au]
     freq = np.geomspace(1e-3, 1e2, 101)
 
-    # collision rate parameters
-    params = {
-        "lorentzian_height": 1,
-        "lorentzian_powerlaw": 0.5,
-        "logistic_activate": 0.1,
-        "logistic_gradient": 100,
-    }
+    # collision frequency parameters
+    params = [5.662e-01, 3.181e-04, 8.065e+00, 4.277e+01, 1.984e-01]
 
-    # define our collision rate function
-    def collisonrate(freq, params):
-        # real part
-        recollision = collision_activate_decay(freq, **params)
-        # imaginary part
-        imcollision = collision_activate_decay_imag(freq, **params)
-
-        return recollision + 1j * imcollision
+    electrons = ElectronGas(t, d)
+    # define our collision frequency function
+    collisionfreq = BornLogPeak(t, d, electrons.chemicalpot, Z) 
 
     # Mermin ELF data object
-    data = MerminELFData(t, d, q, freq, lambda x: collisonrate(x, params))
+    data = MerminELFData(t, d, q, freq, lambda x: collisionfreq(x, params))
 
     # store collision rate params as info
     collision_info = (
-        "\nCollision Rate Parameters:\n"
-        + json.dumps(params)
+        "\nCollision Frequency Parameters:\n"
+        + str(params)
         + "\n"
-        + f"Function: {collision_activate_decay.__name__}\n"
+        + f"Function: {BornLogPeak.__name__}\n"
     )
 
     # write data to file
