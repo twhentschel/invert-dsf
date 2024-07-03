@@ -41,7 +41,7 @@ associated with our inferred collision frequency.
 
 
 ## Installation
-The primary reason to install this project is to reproduce my analysis, with the analysis taking place entirely with the provided jupyter notebooks.
+The primary reason to install this project is to reproduce my analysis, with the analysis taking place entirely within the provided jupyter notebooks.
 This has only been tested on Linux (Ubuntu 20.04).
 
 ---
@@ -58,7 +58,7 @@ This creates a directory called `invert-dsf`. Go into that directory and create 
 ```
 make create_environment
 ```
-This defaults to conda environment called `invert-dsf` if `conda` is installed. Otherwise, it uses `virtualenv` to handle the environment. Test the environment
+This defaults to a conda environment called `invert-dsf` if `conda` is installed. Otherwise, it uses `virtualenv` to handle the environment. Next, test the environment
 ```
 make test_environment
 ```
@@ -66,7 +66,7 @@ Now, activate the environment
 ```
 conda activate invert-dsf
 ```
-and then install the dependencies of the project
+and then install the dependencies of the project with
 ```
 make requirements
 ```
@@ -74,7 +74,10 @@ You can also run tests on the source code with
 ```
 make test_src
 ```
-You can all the make options by simply entering `make`.
+You can see all of the make options by simply entering
+```
+make
+```
 
 ### Run the notebooks
 Once we have the environment set up and activated, we can start running the notebooks. The notebooks are saved as markdown files using `jupytext` to facilitate easier source control. To use the jupyter notebooks,
