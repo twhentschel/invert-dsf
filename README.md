@@ -62,7 +62,7 @@ This defaults to a conda environment called `invert-dsf` if `conda` is installed
 ```
 make test_environment
 ```
-Now, activate the environment
+Now, activate the environment (if using conda)
 ```
 conda activate invert-dsf
 ```
