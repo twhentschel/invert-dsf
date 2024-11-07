@@ -40,7 +40,7 @@ approach is that, since we have a posterior distribution for $\nu(\omega)$, we c
 associated with our inferred collision frequency.
 
 
-## Installation
+# Installation
 The primary reason to install this project is to reproduce my analysis, with the analysis taking place entirely within the provided jupyter notebooks.
 This has only been tested on Linux (Ubuntu 20.04).
 
