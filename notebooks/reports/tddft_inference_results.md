@@ -14,7 +14,7 @@ kernelspec:
 
 ```{code-cell} ipython3
 import numpy as np
-rng = np.random.default_rng()
+rng = np.random.default_rng(1234)
 import matplotlib.pyplot as plt
 plt.style.use(["seaborn-v0_8-paper", "paper-style.mplstyle"])
 import seaborn as sns
@@ -25,7 +25,7 @@ import emcee
 from uegdielectric import ElectronGas
 from uegdielectric.dielectric import Mermin
 
-from src.inference.collision_models import BornLogPeak
+from src.inference.collision_models import BornLogPeak, inverse_screening_length
 from src.inference.mcmc_inference import inference_loop, flat_mcmc_samples
 from src.utilities import AtomicUnits, elec_loss_fn
 import src.inference.probability_models as prob
@@ -97,6 +97,11 @@ def elfmodel(wavenum, freq, params):
 ```
 
 ```{code-cell} ipython3
+print(inverse_screening_length(electrons.temperature, electrons.density))
+collisionfreq.pintegral_screening()
+```
+
+```{code-cell} ipython3
 def plotmaskeddata(
     ax,
     x,
@@ -150,7 +155,7 @@ samplesfile = "../../data/mcmc/mcmc_tddft"
 datasets = [ 
     'abs residual - q = 1.55 - 80% peak threshold',
     'abs residual - q = 0.78 - 80% peak threshold',
-    'abs residual - q = [0.78 1.55] - 80% peak threshold',
+    'abs residual - q = [0.78 1.55] - 80% peak threshold - TDDFT peak normalized',
 ]
 ```
 
@@ -170,169 +175,15 @@ with h5py.File("../../data/mcmc/mcmc_tddft",'r') as f:
 # Inference plots
 
 ```{code-cell} ipython3
-fig, axs = plt.subplots(3, 2, layout="constrained", sharex="col", figsize=(6, 6))
-
-# colors for different datasets
-colors=["tab:orange", "C2", "C0"]
-
-with h5py.File(samplesfile, "r") as f:
-    for i, dset in enumerate(np.asarray(datasets)[[0, 1]]):
-        backend = emcee.backends.HDFBackend(samplesfile, name=dset)
-        flat_samples = flat_mcmc_samples(backend)
-        # randomly pick 100 samples from our MCMC sampling data
-        inds = rng.integers(len(flat_samples), size=10)
-        # Get data mask
-        if i==2:
-            mask = f[dset].attrs["frequency grid masks (for each wavenumber)"]
-        else:
-            mask = f[dset].attrs["frequency grid mask"]
-        # plot collision model + ELF for different parameters from MCMC sampling
-        for ind in inds:
-            # individual MCMC sample of collision model parameters
-            sample = flat_samples[ind]
-            # plot collision frequencies
-            plotmaskeddata(
-                axs[i, 0],
-                freq_grid,
-                collisionfreq.real(freq_grid / AtomicUnits.energy, sample),
-                mask,
-                unmasked_kwargs={"color": colors[i], "alpha": 0.2, "lw": 1},
-                plotmaskrange=True,
-                maskrangeline_kwargs={"color": "black", "lw": 0.5, "ls": (0, (1, 10))}
-            )
-            # plot ELFs
-            plotmaskeddata(
-                axs[i, 1],
-                freq_grid,
-                elfmodel(wavenum[i] * AtomicUnits.length, freq_grid / AtomicUnits.energy, sample),
-                mask,
-                unmasked_kwargs={"color": colors[i], "alpha": 0.2, "lw": 1},
-                plotmaskrange=True,
-                maskrangeline_kwargs={"color": "black", "lw": 0.5, "ls": (0, (1, 10))}
-            )
-        # # plot grid hatch
-        # for ax in axs[i, :]:
-        #     ax.fill_between(
-        #         freq_grid,
-        #         0,
-        #         1, 
-        #         where=mask,
-        #         color="black",
-        #         alpha=1, 
-        #         transform=ax.get_xaxis_transform(),
-        #         facecolor=("white", 0),
-        #         linestyle="--",
-        #         #hatch=".",
-        #         zorder=-1
-        #     )
-    # last data set has special structure
-    dset = datasets[-1]
-    backend = emcee.backends.HDFBackend(samplesfile, name=dset)
-    flat_samples = flat_mcmc_samples(backend)
-    # randomly pick 100 samples from our MCMC sampling data
-    inds = rng.integers(len(flat_samples), size=10)
-    # Get data mask
-    mask = f[dset].attrs["frequency grid masks (for each wavenumber)"]
-    # plot collision model + ELF for different parameters from MCMC sampling
-    for qind in range(len(wavenum)):
-        for ind in inds:
-            # individual MCMC sample of collision model parameters
-            sample = flat_samples[ind]
-            # plot collision frequencies
-            plotmaskeddata(
-                axs[2, 0],
-                freq_grid,
-                collisionfreq.real(freq_grid / AtomicUnits.energy, sample),
-                mask[qind],
-                unmasked_kwargs={"color": colors[2], "alpha": 0.1 + qind/10, "lw": 1},
-                plotmaskrange=True,
-                maskrangeline_kwargs={"color": "black", "lw": 0.5, "ls": (0, (1, 10))}
-            )
-            # plot ELFs
-            # order of wavenums is different than MCMC data
-            y = elfmodel(wavenum[1 - qind] * AtomicUnits.length, freq_grid / AtomicUnits.energy, sample)
-            plotmaskeddata(
-                axs[2, 1],
-                freq_grid,
-                y / np.max(y), # normalized ELF
-                mask[qind],
-                unmasked_kwargs={"color": colors[2], "alpha": 0.1, "lw": 1},
-                plotmaskrange=True,
-                maskrangeline_kwargs={"color": "black", "lw": 0.5, "ls": (0, (1, 10))}
-            )
-        # plot grid hatch
-        # hatch = [".", "."]
-        # for ax in axs[2, :]:
-        #     ax.fill_between(
-        #         freq_grid,
-        #         0,
-        #         1, 
-        #         where=mask[qind],
-        #         color="black",
-        #         alpha=1, 
-        #         transform=ax.get_xaxis_transform(),
-        #         facecolor=("white", 0),
-        #         #hatch=hatch[qind],
-        #         zorder=-1
-        #     )
-
-
-for i in range(len(axs)):
-    # sample label
-    axs[i, 0].plot(0, 0, colors[i], alpha=0.4, lw=1, label="Sample")
-
-    # plot true collision frequency and ELF
-    if i == 0:
-        label="TDDFT"
-    else:
-        label=None
-
-    if i==2:
-        # plot both ELFs on one plot and normalize them
-        pass
-        # axs[i, 2].plot(freq_grid, normalized_tddft_ELF.T, ls="--", color="black", lw=1.5)
-    else:
-        axs[i, 1].plot(freq_grid, tddft_ELF[i], ls="--", color="black", lw=1.5, label=label)
-
-    # axis scales and limits
-    axs[i, 0].set_xscale("log")
-    # axs[i, 0].set_ylim(0, 0.3)
-    
-    # axs[i, 1].set_ylim(0, 0.99)
-
-    # tick params
-    axs[i, 1].tick_params(left=False, labelleft=False, right=True, labelright=True)
-
-# axis lims
-axs[0, 0].set_ylim(0, 1)
-axs[2, 1].set_xlim(0, 40)
-
-# labels and titles
-axs[0, 0].set_title("Collision Freq. (at. u.)")
-axs[0, 0].set_ylabel("(a) ", rotation="horizontal", horizontalalignment="right")
-axs[0, 0].legend(frameon=False, loc="upper left")
-axs[0, 1].set_title("ELF")
-axs[1, 0].legend(frameon=False)
-axs[1, 0].set_ylabel("(b) ", rotation="horizontal", horizontalalignment="right")
-axs[2, 0].legend(frameon=False)
-axs[2, 0].set_ylabel("(c) ", rotation="horizontal", horizontalalignment="right")
-axs[2, 0].set_xlabel("Frequency (eV)")
-axs[2, 1].set_xlabel("Frequency (eV)");
-
-# plt.savefig("../../reports/figures/ideal_mcmc_res-datarange-changes")
-```
-
-```{code-cell} ipython3
-
-```
-
-```{code-cell} ipython3
 import matplotlib.ticker as ticker
 fig, axs = plt.subplots(3, 2, layout="constrained", sharex="col", figsize=(6, 6))
 plt.rcParams['hatch.linewidth'] = 0.3
 
 # colors for different datasets
-colors=["tab:orange", "C2", "C0"]
+colors=["tab:red", "tab:blue"]
+
+# store two sets of parameters, one for each wavenumber
+example_params = np.zeros((2, 5))
 
 with h5py.File(samplesfile, "r") as f:
     for i, dset in enumerate(np.asarray(datasets)[[0, 1]]):
@@ -340,6 +191,7 @@ with h5py.File(samplesfile, "r") as f:
         flat_samples = flat_mcmc_samples(backend)
         # randomly pick 100 samples from our MCMC sampling data
         inds = rng.integers(len(flat_samples), size=50)
+        # example_params.append(flat_samples[inds[4]])
         # Get data mask
         if i==2:
             mask = f[dset].attrs["frequency grid masks (for each wavenumber)"]
@@ -349,6 +201,9 @@ with h5py.File(samplesfile, "r") as f:
         for ind in inds:
             # individual MCMC sample of collision model parameters
             sample = flat_samples[ind]
+            # pick a sample param that drops below some value so we can plot it easily!
+            if np.any(collisionfreq.real(freq_grid / AtomicUnits.energy, sample) < 0.05):
+                example_params[i] = sample
             # plot collision frequencies
             plotmaskeddata(
                 axs[i, 0],
@@ -411,11 +266,12 @@ with h5py.File(samplesfile, "r") as f:
             plotmaskeddata(
                 axs[2, 1],
                 freq_grid,
-                y / np.max(y), # normalized ELF
+                y / np.max(tddft_ELF[1 - qind, 1:]), # normalized ELF
                 mask[qind],
                 bglines=True,
                 unmasked_kwargs={"color": "tab:orange", "alpha": 0.1, "lw": 1},
             )
+            
         # plot hatch
         for ax in axs[2, :]:
             ax.fill_between(
@@ -439,10 +295,28 @@ for i in range(len(axs)):
 
     if i==2:
         # plot both ELFs on one plot and normalize them
-        axs[2, 1].plot(freq_grid, normalized_tddft_ELF.T, ls="--", color="black", lw=1.5)
+        axs[2, 1].plot(freq_grid[1:], normalized_tddft_ELF[:, 1:].T, ls="--", color="black", lw=1.5)
     else:
-        axs[i, 1].plot(freq_grid, tddft_ELF[i], ls="--", color="black", lw=1.5)
-
+        axs[i, 1].plot(freq_grid[1:], tddft_ELF[i, 1:], ls="--", color="black", lw=1.5)
+        
+        # # plot example params from each wavenumber on the plot for the other wavenumber
+        # axs[i, 0].plot(
+        #     freq_grid, 
+        #     collisionfreq.real(freq_grid / AtomicUnits.energy, example_params[1 - i]) + 0.005,
+        #     color=colors[i],
+        #     alpha=0.5,
+        #     lw=1.0
+        # )
+        # order of wavenums is different than MCMC data
+        # y = elfmodel(wavenum[i] * AtomicUnits.length, freq_grid / AtomicUnits.energy, example_params[1 - i])
+        # axs[i, 1].plot(
+        #     freq_grid, 
+        #     y,
+        #     color=colors[i],
+        #     alpha=0.5,
+        #     lw=1.0
+        # )
+    
     # axis scales and limits
     axs[i, 0].set_xscale("log")
 
@@ -456,6 +330,8 @@ for i in range(len(axs)):
 for ax in axs.flatten():
     ax.set_ylim(0)
 axs[0, 0].set_ylim(0, 1)
+axs[1, 0].set_ylim(0)
+axs[2, 0].set_ylim(0, 0.5)
 axs[2, 1].set_xlim(0, 40)
 
 # labels and titles
@@ -476,7 +352,116 @@ axs[1, 1].text(39, 3.7, r"$q = 0.78$ A$^{-1}$", fontsize="small", ha="right", va
 
 # ticks
 axs[2, 0].set_xticks([1e-1, 1e1, 1e3])
-# plt.savefig("../../reports/figures/tddft_inference")
+# plt.savefig("../../reports/figures/tddft_inference_correct_normalization")
+```
+
+# Extrapolation
+
+```{code-cell} ipython3
+import matplotlib.ticker as ticker
+fig, axs = plt.subplots(1, 3, layout="constrained", figsize=(12, 3))
+# plt.rcParams['hatch.linewidth'] = 0.3
+
+# colors for different datasets
+colors=["tab:red", "tab:blue", "tab:purple"]
+labels = [r"$q = 1.55$ A$^{-1}$", r"$q = 0.78$ A$^{-1}$", "combined"]
+
+# average collision frequency parameters for each mcmc data set
+avg_samples = np.zeros((len(datasets), 5))
+with h5py.File(samplesfile, "r") as f:
+    for i, dset in enumerate(np.asarray(datasets)):
+        backend = emcee.backends.HDFBackend(samplesfile, name=dset)
+        flat_samples = flat_mcmc_samples(backend)
+        # average
+        avg_samples[i] = np.mean(flat_samples, axis=0)
+
+
+for i in range(len(avg_samples)):
+    # collision freqeuncy plot
+    axs[0].plot(freq_grid, collisionfreq.real(freq_grid / AtomicUnits.energy, avg_samples[i]), color=colors[i], label=labels[i])
+
+    # plot ELF at q = 1.55
+    y = elfmodel(wavenum[0] * AtomicUnits.length, freq_grid / AtomicUnits.energy, avg_samples[i])
+    if i == 2:
+        y = y #* np.max(tddft_ELF[0, 1:]) / np.max(y)  
+    axs[1].plot(freq_grid, y, color=colors[i])
+
+    # plot ELF at q = 0.78
+    y = elfmodel(wavenum[1] * AtomicUnits.length, freq_grid / AtomicUnits.energy, avg_samples[i])
+    if i == 2:
+        y = y #* np.max(tddft_ELF[1, 1:]) / np.max(y) 
+    axs[2].plot(freq_grid, y, color=colors[i])
+
+# TDDFT
+axs[1].plot(freq_grid[1:], tddft_ELF[0, 1:], ls="--", color="black", lw=1.5)
+axs[2].plot(freq_grid[1:], tddft_ELF[1, 1:], ls="--", color="black", lw=1.5)
+
+# RPA
+# x = np.linspace(1e-1, 50, 500)
+# y = elec_loss_fn(dielectric, np.asarray(wavenum) * AtomicUnits.length, x / AtomicUnits.energy, lambda x: 0)
+# axs[1].plot(x, y[0], color="grey", ls="--", zorder=-1)
+# axs[2].plot(x, y[1], color="grey", ls="--", zorder=-1)
+
+# labels and titles
+axs[0].set_title("Collision Freq. (at. u.)")
+# axs[0].set_ylabel("(a) ", rotation="horizontal", horizontalalignment="right")
+axs[0].legend(loc="upper left", borderaxespad=0.1)
+axs[1].set_title("ELF")
+axs[2].set_title("ELF")
+# axs[1, 0].legend(frameon=False)
+# axs[1, 0].set_ylabel("(b) ", rotation="horizontal", horizontalalignment="right")
+# axs[2, 0].legend(frameon=False)
+# axs[2, 0].set_ylabel("(c) ", rotation="horizontal", horizontalalignment="right")
+axs[0].set_xlabel("Frequency (eV)")
+axs[1].set_xlabel("Frequency (eV)")
+axs[2].set_xlabel("Frequency (eV)")
+
+# axis limits
+axs[0].set_ylim(0, 0.5)
+axs[1].set_ylim(0)
+axs[2].set_ylim(0, 4)
+axs[1].set_xlim(0, 50)
+axs[2].set_xlim(0, 35)
+
+# x scale
+axs[0].set_xscale('log')
+
+# ticks
+axs[0].set_xticks([1e-1, 1e1, 1e3])
+
+# ELF y axis
+# axs[2].tick_params(left=False, labelleft=False)
+
+# # wave numbers
+axs[1].text(33, 1.1, r"$q = 1.55$ A$^{-1}$", fontsize="small", ha="left", va="top")
+axs[2].text(33, 3.7, r"$q = 0.78$ A$^{-1}$", fontsize="small", ha="right", va="top")
+
+# # axis lims
+# for ax in axs.flatten():
+#     ax.set_ylim(0)
+# axs[0, 0].set_ylim(0, 1)
+# axs[1, 0].set_ylim(0, 0.25)
+# axs[2, 1].set_xlim(0, 40)
+
+# # labels and titles
+# axs[0, 0].set_title("Collision Freq. (at. u.)")
+# axs[0, 0].set_ylabel("(a) ", rotation="horizontal", horizontalalignment="right")
+# axs[0, 0].legend(frameon=False, loc="upper left")
+# axs[0, 1].set_title("ELF")
+# # axs[1, 0].legend(frameon=False)
+# axs[1, 0].set_ylabel("(b) ", rotation="horizontal", horizontalalignment="right")
+# # axs[2, 0].legend(frameon=False)
+# axs[2, 0].set_ylabel("(c) ", rotation="horizontal", horizontalalignment="right")
+# axs[2, 0].set_xlabel("Frequency (eV)")
+# axs[2, 1].set_xlabel("Frequency (eV)");
+
+# # wave numbers
+# axs[0, 1].text(1, 1, r"$q = 1.55$ A$^{-1}$", fontsize="small")
+# axs[1, 1].text(39, 3.7, r"$q = 0.78$ A$^{-1}$", fontsize="small", ha="right", va="top")
+
+# # ticks
+# axs[2, 0].set_xticks([1e-1, 1e1, 1e3])
+# plt.savefig("../../reports/figures/tddft_inference_extrapolate")
 ```
 
 ## Aluminum, nonideal DOS
@@ -520,6 +505,10 @@ wavenum = 1.55 # 1/A
 ```
 
 ```{code-cell} ipython3
+nonideal_electrons.chemicalpot
+```
+
+```{code-cell} ipython3
 freq_grid, tddft_ELF = np.loadtxt("../../data/processed/tddft_elf.txt", unpack=True, usecols=[0, 3])
 ```
 
@@ -534,6 +523,11 @@ def elfmodel(freq, params):
         freq,
         lambda x: collisionfreq(x, params)
     )
+```
+
+```{code-cell} ipython3
+print(inverse_screening_length(nonideal_electrons.temperature, nonideal_electrons.density))
+collisionfreq.pintegral_screening()
 ```
 
 ```{code-cell} ipython3
@@ -589,7 +583,7 @@ axs[0].plot(0, 0, "tab:orange", alpha=0.4, lw=1, label="Sample")
 axs[0].plot(0, 0, "black", lw=1.5, label="TDDFT", ls="--")
 
 # plot TDDFT ELF
-axs[1].plot(freq_grid, tddft_ELF, ls="--", color="black", lw=1.5)
+axs[1].plot(freq_grid[1:], tddft_ELF[1:], ls="--", color="black", lw=1.5)
 
 # axis scales and limits
 axs[0].set_xscale("log")
@@ -601,7 +595,7 @@ axs[1].tick_params(left=False, labelleft=False, right=True, labelright=True)
 for ax in axs:
     ax.set_ylim(0)
 # axs[0, 0].set_ylim(0, 3)
-axs[0].set_ylim(0, 0.72)
+axs[0].set_ylim(0, 1)
 axs[1].set_xlim(0, 50)
 
 # labels and titles
@@ -616,9 +610,16 @@ axs[1].set_xlabel("Frequency (eV)");
 # DOS
 # axs[1].text(95, 0.82, r"Non-Ideal DOS", fontsize="small", ha="right", va="top")
 
+# wavenumbers
+axs[1].text(27, 1.15, r"$q = 1.55$ A$^{-1}$", fontsize="small", ha="left", va="top")
+
 # ticks
 axs[0].set_xticks([1e-1, 1e1, 1e3])
-# plt.savefig("../../reports/figures/tddft_Al_inference_nonideal")
+#plt.savefig("../../reports/figures/tddft_Al_inference_nonideal_label")
+```
+
+```{code-cell} ipython3
+
 ```
 
 # Iron
@@ -661,6 +662,10 @@ ideal_electrons = ElectronGas(t, d)
 
 # wavenumber
 wavenum = 1.1 # 1/A
+```
+
+```{code-cell} ipython3
+ideal_electrons.chemicalpot
 ```
 
 ```{code-cell} ipython3

@@ -14,7 +14,7 @@ kernelspec:
 
 ```{code-cell} ipython3
 import numpy as np
-rng = np.random.default_rng()
+rng = np.random.default_rng(1234)
 import matplotlib.pyplot as plt
 plt.style.use(["seaborn-v0_8-paper", "paper-style.mplstyle"])
 import seaborn as sns
@@ -25,7 +25,7 @@ import emcee
 from uegdielectric import ElectronGas
 from uegdielectric.dielectric import Mermin
 
-from src.inference.collision_models import BornLogPeak
+from src.inference.collision_models import BornLogPeak, inverse_screening_length
 from src.inference.mcmc_inference import inference_loop, flat_mcmc_samples
 from src.utilities import AtomicUnits, elec_loss_fn
 import src.inference.probability_models as prob
@@ -58,6 +58,10 @@ dielectric = Mermin(electrons)
 wavenum = 1.55 # 1/[angstrom]
 ```
 
+```{code-cell} ipython3
+electrons.chemicalpot
+```
+
 # Get ideal ELF data
 
 ```{code-cell} ipython3
@@ -80,6 +84,11 @@ def elfmodel(freq, params):
         freq,
         lambda x: collisionfreq(x, params)
     )
+```
+
+```{code-cell} ipython3
+print(inverse_screening_length(electrons.temperature, electrons.density))
+collisionfreq.pintegral_screening()
 ```
 
 ```{code-cell} ipython3
@@ -377,10 +386,16 @@ axs[2, 0].set_ylabel("(c) ", rotation="horizontal", horizontalalignment="right")
 axs[2, 0].set_xlabel("Frequency (eV)")
 axs[2, 1].set_xlabel("Frequency (eV)");
 
+# wavenumbers
+axs[0, 1].text(35, 0.9, r"$q = 1.55$ A$^{-1}$", fontsize="small", ha="left", va="top")
+axs[1, 1].text(35, 0.9, r"$q = 1.55$ A$^{-1}$", fontsize="small", ha="left", va="top")
+axs[2, 1].text(35, 0.9, r"$q = 1.55$ A$^{-1}$", fontsize="small", ha="left", va="top")
+
+
 # ticks
 axs[2, 0].set_xticks([1e-1, 1e1, 1e3])
 
-# plt.savefig("../../reports/figures/ideal_mcmc_res-datarange-changes")
+# plt.savefig("../../reports/figures/ideal_mcmc_res-datarange-changes_wavenum")
 ```
 
 ```{code-cell} ipython3
