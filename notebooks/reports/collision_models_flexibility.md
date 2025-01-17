@@ -18,9 +18,10 @@ import matplotlib.pyplot as plt
 plt.style.use(["seaborn-v0_8-paper", "paper-style.mplstyle"])
 from scipy import optimize
 
-from src.inference.collision_models import BornLogPeak
+import src.inference.collision_models as models
 from src.utilities import AtomicUnits, elec_loss_fn, kramerskronig
-from uegdielectric import ElectronGas, dielectric
+from uegdielectric import ElectronGas
+from uegdielectric.dielectric import Mermin
 ```
 
 ```{code-cell} ipython3
@@ -65,6 +66,9 @@ print(f"inverse screening length = {models.inverse_screening_length(electrons.te
 print(f"chemical potential = {electrons.chemicalpot}")
 
 wavenum = 1.55 # 1/[angstrom]
+
+# dielectric function
+dielectric = Mermin(electrons)
 ```
 
 # Create Born collision freqeuncy data
@@ -92,7 +96,7 @@ collisionfreqs = [born, Tmat, Tplus, KG]
 for colldata, name in zip(collisionfreqs, names):
     # fit the model to the data
     # sigma is the data so we consider the relative residual in the fit: (ydata - model) / ydata
-    popt, pcov = curve_fit(model, freq, colldata.real, p0=(1, 1, 1, 1, 1), sigma=colldata.real, bounds=(0, np.inf))
+    popt, pcov = optimize.curve_fit(model, freq, colldata.real, p0=(1, 1, 1, 1, 1), sigma=colldata.real, bounds=(0, np.inf))
     # print(name)
     # print(f"optimized parameters: {popt}")
     # print(f"condition number of cov. matrix: {np.linalg.cond(pcov)}")
@@ -104,7 +108,7 @@ for colldata, name in zip(collisionfreqs, names):
     # ELF
     # plot the true ELF 
     trueelf = elec_loss_fn(
-        mermin(wavenum * AtomicUnits.length, freq, lambda x: np.interp(x, freq, colldata))
+        dielectric(wavenum * AtomicUnits.length, freq, lambda x: np.interp(x, freq, colldata))
     )
     p = ax[1].plot(
         freqev,
@@ -113,7 +117,7 @@ for colldata, name in zip(collisionfreqs, names):
     )
     # plot ELF with fitted model
     modelelf = elec_loss_fn(
-        mermin,
+        dielectric,
         wavenum * AtomicUnits.length,
         freq,
         lambda x: collisionfreq(x, popt)
@@ -129,7 +133,7 @@ for colldata, name in zip(collisionfreqs, names):
 # plot RPA ELF
 ax[1].plot(
     freqev,
-    elec_loss_fn(mermin(wavenum * AtomicUnits.length, freq)),
+    elec_loss_fn(dielectric(wavenum * AtomicUnits.length, freq)),
     ls="-.",
     color="grey",
     label="RPA"
@@ -145,7 +149,7 @@ ax[1].set_ylabel("ELF")
 ax[1].set_xlabel("Frequency (eV)")
 ax[1].legend()
 plt.tight_layout()
-plt.savefig("../../reports/figures/model_flexibility")
+plt.savefig("../../reports/figures/model_flexibility.tif", dpi=400)
 ```
 
 # Comparing my Kramers-Kronig method with the imaginary parts in the data
