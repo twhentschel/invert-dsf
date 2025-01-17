@@ -14,7 +14,7 @@ kernelspec:
 
 ```{code-cell} ipython3
 import numpy as np
-rng = np.random.default_rng(1234)
+rng = np.random.default_rng(seed=11)
 import matplotlib.pyplot as plt
 plt.style.use(["seaborn-v0_8-paper", "paper-style.mplstyle"])
 import seaborn as sns
@@ -226,7 +226,7 @@ ax[1].set_yscale("log")
 ax[1].indicate_inset_zoom(axins, edgecolor="black", lw=1)
 
 plt.tight_layout()
-# plt.savefig("../../reports/figures/ideal_mcmc_relres_fullgrid")
+plt.savefig("../../reports/figures/ideal_mcmc_relres_fullgrid.tif", dpi=500)
 ```
 
 ```{code-cell} ipython3
@@ -395,7 +395,7 @@ axs[2, 1].text(35, 0.9, r"$q = 1.55$ A$^{-1}$", fontsize="small", ha="left", va=
 # ticks
 axs[2, 0].set_xticks([1e-1, 1e1, 1e3])
 
-# plt.savefig("../../reports/figures/ideal_mcmc_res-datarange-changes_wavenum")
+plt.savefig("../../reports/figures/ideal_mcmc_res-datarange-changes_wavenum.tif")
 ```
 
 ```{code-cell} ipython3

@@ -20,7 +20,7 @@ We can use the Mermin dielectric function in this formula along with the collisi
 
 ```{code-cell} ipython3
 import numpy as np
-rng = np.random.default_rng()
+rng = np.random.default_rng(seed=41)
 import matplotlib.pyplot as plt
 plt.style.use(["seaborn-v0_8-paper", "paper-style.mplstyle"])
 import seaborn as sns
@@ -102,7 +102,7 @@ plt.ylabel("Conductivity (at. u.)")
 plt.ylim(1e-5, 1.2e0)
 plt.xlim(1e-1, 8e2)
 plt.tight_layout()
-# plt.savefig("../../reports/figures/dynamic_conductivity_inference_correct_normalization")
+plt.savefig("../../reports/figures/dynamic_conductivity_inference_correct_normalization.tif")
 ```
 
 ```{code-cell} ipython3

@@ -16,7 +16,7 @@ ytick.labelsize : 15
 
 legend.fontsize : 15
 
-figure.dpi : 150
+figure.dpi : 600
 figure.figsize : 6,4
 
 lines.linewidth : 1.5

@@ -14,7 +14,7 @@ kernelspec:
 
 ```{code-cell} ipython3
 import numpy as np
-rng = np.random.default_rng(1234)
+rng = np.random.default_rng(seed=11)
 import matplotlib.pyplot as plt
 plt.style.use(["seaborn-v0_8-paper", "paper-style.mplstyle"])
 import seaborn as sns
@@ -352,7 +352,7 @@ axs[1, 1].text(39, 3.7, r"$q = 0.78$ A$^{-1}$", fontsize="small", ha="right", va
 
 # ticks
 axs[2, 0].set_xticks([1e-1, 1e1, 1e3])
-# plt.savefig("../../reports/figures/tddft_inference_correct_normalization")
+plt.savefig("../../reports/figures/tddft_inference_correct_normalization.tif")
 ```
 
 # Extrapolation
@@ -461,7 +461,7 @@ axs[2].text(33, 3.7, r"$q = 0.78$ A$^{-1}$", fontsize="small", ha="right", va="t
 
 # # ticks
 # axs[2, 0].set_xticks([1e-1, 1e1, 1e3])
-# plt.savefig("../../reports/figures/tddft_inference_extrapolate")
+plt.savefig("../../reports/figures/tddft_inference_extrapolate.tif")
 ```
 
 ## Aluminum, nonideal DOS
@@ -615,7 +615,7 @@ axs[1].text(27, 1.15, r"$q = 1.55$ A$^{-1}$", fontsize="small", ha="left", va="t
 
 # ticks
 axs[0].set_xticks([1e-1, 1e1, 1e3])
-#plt.savefig("../../reports/figures/tddft_Al_inference_nonideal_label")
+plt.savefig("../../reports/figures/tddft_Al_inference_nonideal_label.tif")
 ```
 
 ```{code-cell} ipython3
